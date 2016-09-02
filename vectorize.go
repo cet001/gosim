@@ -38,13 +38,13 @@ func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
 				me.word2id[word] = termId
 				me.nextTermId++
 			}
-			terms = append(terms, Term{Id: termId, Score: float64(freq)})
+			terms = append(terms, Term{Id: termId, Value: float64(freq)})
 		}
 	} else {
 		for word, freq := range word2freq {
 			termId, found := me.word2id[word]
 			if found {
-				terms = append(terms, Term{Id: termId, Score: float64(freq)})
+				terms = append(terms, Term{Id: termId, Value: float64(freq)})
 			}
 		}
 	}

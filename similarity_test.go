@@ -9,13 +9,13 @@ func TestTFIDF_AddDoc(t *testing.T) {
 	c := NewTFIDF()
 
 	docvec1 := []Term{
-		{Id: 1, Score: 10},
-		{Id: 2, Score: 20},
+		{Id: 1, Value: 10},
+		{Id: 2, Value: 20},
 	}
 
 	docvec2 := []Term{
-		{Id: 1, Score: 100},
-		{Id: 3, Score: 300},
+		{Id: 1, Value: 100},
+		{Id: 3, Value: 300},
 	}
 
 	// Add 2 document vectors

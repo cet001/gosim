@@ -13,12 +13,12 @@ func TestVectorize(t *testing.T) {
 
 	// Case 1: updateVocab=false
 	vec := vocab.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, false)
-	assert.Equal(t, []Term{{Id: 1, Score: 2.0}, {Id: 3, Score: 1.0}}, vec)
+	assert.Equal(t, []Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3}, vocab.word2id)
 
 	// Case 2: updateVocab=true
 	vec = vocab.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, true)
-	assert.Equal(t, []Term{{Id: 1, Score: 2.0}, {Id: 3, Score: 1.0}, {Id: 4, Score: 3}}, vec)
+	assert.Equal(t, []Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, vocab.word2id)
 }
 

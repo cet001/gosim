@@ -14,22 +14,14 @@ import (
 
 var logger = log.New(os.Stderr, "[gosim] ", (log.Ldate | log.Ltime | log.Lshortfile))
 
-type IntVector map[int]int
+type SparseVector []Term
 
-type FloatVector map[int]float64
+type SparseHashVector map[int]float64
 
-// Anything with a unique ID and a score.
 type Term struct {
-	Id    int
-	Score float64
+	Id    int     // The term's unique id within a given vocabulary
+	Value float64 // Any associated value (e.g. term frequency, tf-idf score)
 }
-
-// Sorts terms in descending order by score.
-type byScore []Term
-
-func (a byScore) Len() int           { return len(a) }
-func (a byScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
 
 // Sorts terms by increasing Id.
 type byTermId []Term
@@ -38,27 +30,36 @@ func (a byTermId) Len() int           { return len(a) }
 func (a byTermId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byTermId) Less(i, j int) bool { return a[i].Id < a[j].Id }
 
+type ScoredDoc struct {
+	Id    int
+	Score float64
+}
+
+// Sorts ScoredDoc objects in descending order by score.
+type byScore []ScoredDoc
+
+func (a byScore) Len() int           { return len(a) }
+func (a byScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
+
 // Represents a vectorized document within a corpus.
 type Document struct {
 	// Unique document ID within a given corpus.
 	Id int
 
 	// Term frequencies for each unique term in this document.
-	tf []Term
+	tf SparseVector
 
 	// tfidf[x] -> the TF-IDF score of term x within this document.
-	tfidf []Term
+	tfidf SparseVector
 }
 
 type TFIDF struct {
 	// The documents within this corpus.
 	docs []Document
 
-	// df[x] -> the number of documents in which term x was mentioned.
-	df IntVector
-
 	// idf[x] -> the inverse document frequency of term x.
-	idf FloatVector
+	idf SparseHashVector
 
 	// Whenever new documents are added to this corpus, the global stats need to
 	// be recalculated (via Recalculate()).  This flag keeps track of this state.
@@ -68,15 +69,14 @@ type TFIDF struct {
 func NewTFIDF() *TFIDF {
 	return &TFIDF{
 		docs:        make([]Document, 0, 200000),
-		df:          make(IntVector, 200000),
 		needsRecalc: true,
 	}
 }
 
-func (me *TFIDF) AddDoc(docId int, termFrequencies []Term) {
+func (me *TFIDF) AddDoc(docId int, doc SparseVector) {
 	me.docs = append(me.docs, Document{
 		Id: docId,
-		tf: termFrequencies,
+		tf: doc,
 	})
 	me.needsRecalc = true
 }
@@ -119,7 +119,7 @@ func (me *TFIDF) Calculate() {
 
 	logger.Printf("Calculating IDF values for %v terms.", len(df))
 	startTime = time.Now()
-	me.idf = make(FloatVector, len(df))
+	me.idf = make(SparseHashVector, len(df))
 	totalDocs := float64(len(me.docs))
 	for termId, df := range df {
 		me.idf[termId] = 1.0 + math.Log(totalDocs/float64(df))
@@ -137,7 +137,7 @@ func (me *TFIDF) Calculate() {
 	me.needsRecalc = false
 }
 
-func (me *TFIDF) CalcSimilarity(doc1, doc2 []Term) float64 {
+func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
 	me.validateState()
 
 	doc1_tfidf := calcTFIDF(doc1, me.idf)
@@ -145,22 +145,20 @@ func (me *TFIDF) CalcSimilarity(doc1, doc2 []Term) float64 {
 	return dot(doc1_tfidf, doc2_tfidf) / (norm(doc1_tfidf) * norm(doc2_tfidf))
 }
 
-func (me *TFIDF) SimilarDocsForText(query []Term) []Term {
+func (me *TFIDF) SimilarDocsForText(query SparseVector) []ScoredDoc {
 	me.validateState()
 
 	queryTFIDF := calcTFIDF(query, me.idf)
 	normQueryTFIDF := norm(queryTFIDF)
-	logger.Printf(">>>> SimilarDocsForText(): queryTFIDF vector size is %v", len(queryTFIDF))
 
-	rankedDocs := []Term{}
+	rankedDocs := []ScoredDoc{}
 	for i := 0; i < len(me.docs); i++ {
 		doc := &me.docs[i]
 		score := dot(queryTFIDF, doc.tfidf) / (normQueryTFIDF * norm(doc.tfidf))
-		rankedDocs = append(rankedDocs, Term{Id: doc.Id, Score: score})
+		rankedDocs = append(rankedDocs, ScoredDoc{Id: doc.Id, Score: score})
 	}
 
 	sort.Sort(byScore(rankedDocs))
-
 	return rankedDocs
 }
 
@@ -171,31 +169,31 @@ func (me *TFIDF) validateState() {
 	}
 }
 
-// doc = Document represented as a vector of (term, freq) tuples
+// termFreqs = term frequencies
 // idfs = vector of pre-calculated inverse document frequencies for each term in the corpus.
-func calcTFIDF(doc []Term, idfs FloatVector) []Term {
-	tfidf := make([]Term, len(doc))
-	for i := 0; i < len(doc); i++ {
-		term := &doc[i]
-		tfidf[i] = Term{Id: term.Id, Score: (term.Score * idfs[term.Id])}
+func calcTFIDF(termFreqs []Term, idfs SparseHashVector) []Term {
+	tfidf := make([]Term, len(termFreqs))
+	for i := 0; i < len(termFreqs); i++ {
+		term := &termFreqs[i]
+		tfidf[i] = Term{Id: term.Id, Value: (term.Value * idfs[term.Id])}
 	}
 
 	return tfidf
 }
 
 // Calculates the Euclidean norm (a.k.a. L2-norm) of the specified vector.
-func norm(vec []Term) float64 {
+func norm(vec SparseVector) float64 {
 	sumOfSquares := 0.0
 	for i := 0; i < len(vec); i++ {
 		term := &vec[i]
-		sumOfSquares += (term.Score * term.Score)
+		sumOfSquares += (term.Value * term.Value)
 	}
 
 	return math.Sqrt(sumOfSquares)
 }
 
 // Calculates the dot product of vectors v1 and v2.
-func dot(v1, v2 []Term) float64 {
+func dot(v1, v2 SparseVector) float64 {
 	var dp float64 = 0.0
 	lenV1, lenV2 := len(v1), len(v2)
 	idx1, idx2 := 0, 0
@@ -208,7 +206,7 @@ func dot(v1, v2 []Term) float64 {
 		} else if term2.Id < term1.Id {
 			idx2++
 		} else {
-			dp += (term1.Score * term2.Score)
+			dp += (term1.Value * term2.Value)
 			idx1++
 			idx2++
 		}
