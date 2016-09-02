@@ -17,12 +17,12 @@ import (
 //
 type Tokenize func(text string) []string
 
-func MakeWhitespaceTokenizer() Tokenize {
+func MakeDefaultTokenizer() Tokenize {
 	// Determines how raw text is broken up into individual terms.
 	var termSplitFn = func(c rune) bool {
 		return unicode.IsSpace(c) ||
 			c == '.' || c == '!' || c == '?' || c == ',' || c == ':' ||
-			c == ';' || c == '"' || c == '|'
+			c == ';' || c == '"' || c == '|' || c == '\''
 	}
 
 	// Determines how each term is trimmed.

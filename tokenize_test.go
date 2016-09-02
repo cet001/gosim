@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestMakeWhitespaceTokenizer(t *testing.T) {
-	tokenize := MakeWhitespaceTokenizer()
+func TestMakeDefaultTokenizer(t *testing.T) {
+	tokenize := MakeDefaultTokenizer()
 
 	assert.Equal(t, []string{}, tokenize(""))
 	assert.Equal(t, []string{}, tokenize(" \n\t"))
@@ -15,7 +15,7 @@ func TestMakeWhitespaceTokenizer(t *testing.T) {
 }
 
 func BenchmarkTokenize(b *testing.B) {
-	tokenize := MakeWhitespaceTokenizer()
+	tokenize := MakeDefaultTokenizer()
 
 	s := `
 		NEW YORK—In a year that saw the release of such best-selling products as

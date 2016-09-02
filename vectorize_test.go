@@ -5,6 +5,18 @@ import (
 	"testing"
 )
 
+func TestVocabulary_BasicUsage(t *testing.T) {
+	vocab := NewVocabulary()
+	assert.Equal(t, 0, vocab.Size())
+
+	termvec := vocab.Vectorize([]string{"b", "a", "c", "b", "a", "a"}, true)
+
+	// Verify terms are ordered by Id
+	for i := 0; i < len(termvec)-1; i++ {
+		assert.True(t, termvec[i].Id < termvec[i+1].Id)
+	}
+}
+
 func TestWord(t *testing.T) {
 	id2word := map[int]string{1: "a", 2: "b", 3: "c"}
 

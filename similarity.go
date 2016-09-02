@@ -239,25 +239,25 @@ func rankTermsByDocFreq(term2df map[int]int) []Term {
 }
 
 func removeUnimportantTerms(termsByDocFreq []Term, docFreqs map[int]int, numDocs int) int {
-	numTermsInOnlyOneDoc := 0
+	numInfrequentTerms := 0
 	numUbiquitousTerms := 0
 
 	for _, term := range termsByDocFreq {
-		if term.Value == 1 {
+		docFreq := term.Value
+		if docFreq <= 3 {
 			delete(docFreqs, term.Id)
-			numTermsInOnlyOneDoc++
+			numInfrequentTerms++
 		} else {
-			docFreq := term.Value
 			if (docFreq / float64(numDocs)) > 0.20 {
 				delete(docFreqs, term.Id)
 				numUbiquitousTerms++
 			}
 		}
 	}
-	logger.Printf("%v terms appeared in only 1 document out of %v", numTermsInOnlyOneDoc, numDocs)
+	logger.Printf("%v terms were deemed infrequent", numInfrequentTerms)
 	logger.Printf("%v terms were deemed ubiquitous", numUbiquitousTerms)
 
-	return numTermsInOnlyOneDoc + numUbiquitousTerms
+	return numInfrequentTerms + numUbiquitousTerms
 }
 
 // For each document vector (doc.tf), filters out all term Ids that are not
