@@ -12,9 +12,6 @@ func TestMakeWhitespaceTokenizer(t *testing.T) {
 	assert.Equal(t, []string{}, tokenize(""))
 	assert.Equal(t, []string{}, tokenize(" \n\t"))
 	assert.Equal(t, []string{"foo", "bar", "baz", "foo-bar"}, tokenize(" Foo BAR \t baz!?  foo-bar\n"))
-
-	// verify stopwords are filtered out
-	assert.Equal(t, []string{"champions"}, tokenize("We are the champions."))
 }
 
 func BenchmarkTokenize(b *testing.B) {

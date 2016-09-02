@@ -8,18 +8,26 @@ type Vectorize func(words []string, updateVocab bool) []Term
 
 type Vocabulary struct {
 	word2id    map[string]int
+	id2word    map[int]string
 	nextTermId int
 }
 
 func NewVocabulary() *Vocabulary {
+	const initialCapacity = 1000000
 	return &Vocabulary{
-		word2id:    make(map[string]int, 1000000),
+		word2id:    make(map[string]int, initialCapacity),
+		id2word:    make(map[int]string, initialCapacity),
 		nextTermId: 1,
 	}
 }
 
 func (me *Vocabulary) Size() int {
 	return len(me.word2id)
+}
+
+func (me *Vocabulary) Word(termId int) string {
+	word, _ := me.id2word[termId]
+	return word
 }
 
 func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
@@ -36,6 +44,7 @@ func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
 			if !found {
 				termId = me.nextTermId
 				me.word2id[word] = termId
+				me.id2word[termId] = word
 				me.nextTermId++
 			}
 			terms = append(terms, Term{Id: termId, Value: float64(freq)})

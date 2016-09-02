@@ -5,9 +5,24 @@ import (
 	"testing"
 )
 
+func TestWord(t *testing.T) {
+	id2word := map[int]string{1: "a", 2: "b", 3: "c"}
+
+	vocab := &Vocabulary{
+		id2word: id2word,
+	}
+
+	for id, expectedWord := range id2word {
+		assert.Equal(t, expectedWord, vocab.Word(id))
+	}
+
+	assert.Equal(t, "", vocab.Word(9999))
+}
+
 func TestVectorize(t *testing.T) {
 	vocab := &Vocabulary{
 		word2id:    map[string]int{"a": 1, "b": 2, "c": 3},
+		id2word:    map[int]string{1: "a", 2: "b", 3: "c"},
 		nextTermId: 4,
 	}
 
@@ -21,12 +36,3 @@ func TestVectorize(t *testing.T) {
 	assert.Equal(t, []Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, vocab.word2id)
 }
-
-// func BenchmarkVectorize(b *testing.B) {
-// 	totalTokens := 0
-// 	for n := 0; n < b.N; n++ {
-// 		tokens := tokenize(s)
-// 		totalTokens += len(tokens)
-// 	}
-// 	fmt.Printf("BenchmarkTokenize: totalTokens=%v\n", totalTokens)
-// }

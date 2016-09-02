@@ -69,3 +69,12 @@ func TestCalcTFIDF(t *testing.T) {
 	idf := SparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
 	assert.Equal(t, SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
 }
+
+func TestRankTermsByDocFreq(t *testing.T) {
+	termId2df := map[int]int{100: 10, 200: 5, 300: 2}
+	rankedTerms := rankTermsByDocFreq(termId2df)
+	assert.Equal(t,
+		[]Term{{300, 2}, {200, 5}, {100, 10}},
+		rankedTerms,
+	)
+}
