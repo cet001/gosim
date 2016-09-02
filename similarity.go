@@ -140,6 +140,7 @@ func (me *TFIDF) Calculate() {
 func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
 	me.validateState()
 
+	// Calculate cosine similarity
 	doc1_tfidf := calcTFIDF(doc1, me.idf)
 	doc2_tfidf := calcTFIDF(doc2, me.idf)
 	return dot(doc1_tfidf, doc2_tfidf) / (norm(doc1_tfidf) * norm(doc2_tfidf))
@@ -154,6 +155,7 @@ func (me *TFIDF) SimilarDocsForText(query SparseVector) []ScoredDoc {
 	rankedDocs := []ScoredDoc{}
 	for i := 0; i < len(me.docs); i++ {
 		doc := &me.docs[i]
+		// Calculate cosine similarity
 		score := dot(queryTFIDF, doc.tfidf) / (normQueryTFIDF * norm(doc.tfidf))
 		rankedDocs = append(rankedDocs, ScoredDoc{Id: doc.Id, Score: score})
 	}
@@ -167,18 +169,6 @@ func (me *TFIDF) validateState() {
 	if me.needsRecalc {
 		panic("Corpus stats need to be recalculated.  Call Recalculate().")
 	}
-}
-
-// termFreqs = term frequencies
-// idfs = vector of pre-calculated inverse document frequencies for each term in the corpus.
-func calcTFIDF(termFreqs []Term, idfs SparseHashVector) []Term {
-	tfidf := make([]Term, len(termFreqs))
-	for i := 0; i < len(termFreqs); i++ {
-		term := &termFreqs[i]
-		tfidf[i] = Term{Id: term.Id, Value: (term.Value * idfs[term.Id])}
-	}
-
-	return tfidf
 }
 
 // Calculates the Euclidean norm (a.k.a. L2-norm) of the specified vector.
@@ -217,4 +207,16 @@ func dot(v1, v2 SparseVector) float64 {
 	}
 
 	return dp
+}
+
+// termFreqs = term frequencies
+// idfs = vector of inverse document frequencies for each term in the corpus.
+func calcTFIDF(termFreqs SparseVector, idfs SparseHashVector) SparseVector {
+	tfidf := make([]Term, len(termFreqs))
+	for i := 0; i < len(termFreqs); i++ {
+		term := &termFreqs[i]
+		tfidf[i] = Term{Id: term.Id, Value: (term.Value * idfs[term.Id])}
+	}
+
+	return tfidf
 }
