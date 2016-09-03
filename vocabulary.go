@@ -1,6 +1,8 @@
 package gosim
 
 import (
+	"encoding/gob"
+	"os"
 	"sort"
 )
 
@@ -70,4 +72,59 @@ func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
 
 	sort.Sort(byTermId(terms))
 	return terms
+}
+
+func SaveVocabulary(vocab *Vocabulary, filePath string) error {
+	file, err := os.Create(filePath)
+	defer file.Close()
+
+	if err == nil {
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(len(vocab.word2id))
+		encoder.Encode(vocab.nextTermId)
+		encoder.Encode(vocab.word2id)
+	}
+
+	return err
+}
+
+func LoadVocabulary(filePath string) (*Vocabulary, error) {
+	file, err := os.Open(filePath)
+	defer file.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	decoder := gob.NewDecoder(file)
+	vocab := &Vocabulary{}
+	var vocabSize int
+
+	decodeFuncs := []func() error{
+		func() error {
+			return decoder.Decode(&vocabSize)
+		},
+		func() error {
+			return decoder.Decode(&vocab.nextTermId)
+		},
+		func() error {
+			return decoder.Decode(&vocab.word2id)
+		},
+	}
+
+	for _, decode := range decodeFuncs {
+		err := decode()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Build the reverse lookup
+	vocab.id2word = make(map[int]string, vocabSize)
+	for k, v := range vocab.word2id {
+		vocab.id2word[v] = k
+	}
+
+	return vocab, nil
+
 }
