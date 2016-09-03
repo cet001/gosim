@@ -88,22 +88,22 @@ func (me *TFIDF) AddDoc(docId int, doc SparseVector) {
 	me.needsRecalc = true
 }
 
-// Trains the model. Returns a ranked list of the distinct terms and their
-// corresponding document frequency (ordered by increasing frequency).
+// Trains the model. Returns a list of the distinct terms and their
+// corresponding document frequency (sorted by increasing frequency).
 func (me *TFIDF) Train() []Term {
 	logger.Printf("Calculating document frequencies")
 	startTime := time.Now()
 	df := calcDocFrequencies(me.docs)
 	logger.Printf("Document frequency calculation took %v.", time.Since(startTime))
 
-	logger.Printf("Ranking terms in corpus by document frequency")
+	logger.Printf("Sorting terms in corpus by document frequency")
 	startTime = time.Now()
-	termsRankedByDocFreq := rankTermsByDocFreq(df)
-	logger.Printf("Document frequency ranking for %v terms took %v.", len(termsRankedByDocFreq), time.Since(startTime))
+	termsSortedByDocFreq := sortTermsByDocFreq(df)
+	logger.Printf("Document frequency sorting for %v terms took %v.", len(termsSortedByDocFreq), time.Since(startTime))
 
 	logger.Printf("Removing insignificant terms from corpus")
 	startTime = time.Now()
-	numTermsRemoved := removeUnimportantTerms(termsRankedByDocFreq, df, len(me.docs))
+	numTermsRemoved := removeUnimportantTerms(termsSortedByDocFreq, df, len(me.docs))
 	filterDocVectors(me.docs, df)
 	logger.Printf("%v insignificant terms removed in %v.", numTermsRemoved, time.Since(startTime))
 
@@ -125,7 +125,7 @@ func (me *TFIDF) Train() []Term {
 	logger.Printf("TF-IDF calculation took %v.", time.Since(startTime))
 
 	me.needsRecalc = false
-	return termsRankedByDocFreq
+	return termsSortedByDocFreq
 }
 
 func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
@@ -228,7 +228,7 @@ func calcTFIDF(termFreqs SparseVector, idfs SparseHashVector) SparseVector {
 	return tfidf
 }
 
-func rankTermsByDocFreq(term2df map[int]int) []Term {
+func sortTermsByDocFreq(term2df map[int]int) []Term {
 	terms := make([]Term, 0, len(term2df))
 	for termId, df := range term2df {
 		terms = append(terms, Term{Id: termId, Value: float64(df)})

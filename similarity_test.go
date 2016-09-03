@@ -70,9 +70,9 @@ func TestCalcTFIDF(t *testing.T) {
 	assert.Equal(t, SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
 }
 
-func TestRankTermsByDocFreq(t *testing.T) {
+func TestSortTermsByDocFreq(t *testing.T) {
 	termId2df := map[int]int{100: 10, 200: 5, 300: 2}
-	rankedTerms := rankTermsByDocFreq(termId2df)
+	rankedTerms := sortTermsByDocFreq(termId2df)
 	assert.Equal(t,
 		[]Term{{300, 2}, {200, 5}, {100, 10}},
 		rankedTerms,
