@@ -96,16 +96,11 @@ func (me *TFIDF) Train() []Term {
 	df := calcDocFrequencies(me.docs)
 	logger.Printf("Document frequency calculation took %v.", time.Since(startTime))
 
-	logger.Printf("Sorting terms in corpus by document frequency")
+	logger.Printf("Removing unimportant terms from corpus")
 	startTime = time.Now()
-	termsSortedByDocFreq := sortTermsByDocFreq(df)
-	logger.Printf("Document frequency sorting for %v terms took %v.", len(termsSortedByDocFreq), time.Since(startTime))
-
-	logger.Printf("Removing insignificant terms from corpus")
-	startTime = time.Now()
-	numTermsRemoved := removeUnimportantTerms(termsSortedByDocFreq, df, len(me.docs))
+	unimportantTerms := removeUnimportantTerms(df, len(me.docs))
 	filterDocVectors(me.docs, df)
-	logger.Printf("%v insignificant terms removed in %v.", numTermsRemoved, time.Since(startTime))
+	logger.Printf("%v unimportant terms removed in %v.", len(unimportantTerms), time.Since(startTime))
 
 	logger.Printf("Calculating IDF values for %v terms.", len(df))
 	startTime = time.Now()
@@ -125,9 +120,12 @@ func (me *TFIDF) Train() []Term {
 	logger.Printf("TF-IDF calculation took %v.", time.Since(startTime))
 
 	me.needsRecalc = false
-	return termsSortedByDocFreq
+	return unimportantTerms
 }
 
+// Calculates a similarity score indicating how similar douments doc1 and doc2 are.
+// Returns a score in the range [0.0..1.0], where 1.0 means the documents are
+// identical.
 func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
 	me.validateState()
 
@@ -191,11 +189,15 @@ func norm(vec SparseVector) float64 {
 
 // Calculates the dot product of vectors v1 and v2.
 func dot(v1, v2 SparseVector) float64 {
-	var dp float64 = 0.0
+	var dotProduct float64 = 0.0
 	lenV1, lenV2 := len(v1), len(v2)
 	idx1, idx2 := 0, 0
 
 	for {
+		if idx1 == lenV1 || idx2 == lenV2 {
+			break
+		}
+
 		term1, term2 := &v1[idx1], &v2[idx2]
 
 		if term1.Id < term2.Id {
@@ -203,17 +205,13 @@ func dot(v1, v2 SparseVector) float64 {
 		} else if term2.Id < term1.Id {
 			idx2++
 		} else {
-			dp += (term1.Value * term2.Value)
+			dotProduct += (term1.Value * term2.Value)
 			idx1++
 			idx2++
 		}
-
-		if idx1 == lenV1 || idx2 == lenV2 {
-			break
-		}
 	}
 
-	return dp
+	return dotProduct
 }
 
 // termFreqs = term frequencies
@@ -228,40 +226,24 @@ func calcTFIDF(termFreqs SparseVector, idfs SparseHashVector) SparseVector {
 	return tfidf
 }
 
-func sortTermsByDocFreq(term2df map[int]int) []Term {
-	terms := make([]Term, 0, len(term2df))
-	for termId, df := range term2df {
-		terms = append(terms, Term{Id: termId, Value: float64(df)})
-	}
+func removeUnimportantTerms(docFreqs map[int]int, numDocs int) []Term {
+	removedTerms := make([]Term, 0, 100000)
 
-	sort.Sort(byTermValue(terms))
-	return terms
-}
-
-func removeUnimportantTerms(termsByDocFreq []Term, docFreqs map[int]int, numDocs int) int {
-	numInfrequentTerms := 0
-	numUbiquitousTerms := 0
-
-	for _, term := range termsByDocFreq {
-		docFreq := term.Value
-		if docFreq <= 3 {
-			delete(docFreqs, term.Id)
-			numInfrequentTerms++
-		} else {
-			if (docFreq / float64(numDocs)) > 0.20 {
-				delete(docFreqs, term.Id)
-				numUbiquitousTerms++
-			}
+	for termId, docFreq := range docFreqs {
+		isUnimportantTerm := (docFreq <= 3 || ((float64(docFreq) / float64(numDocs)) > 0.20))
+		if isUnimportantTerm {
+			delete(docFreqs, termId)
+			removedTerms = append(removedTerms, Term{Id: termId, Value: float64(docFreq)})
 		}
 	}
-	logger.Printf("%v terms were deemed infrequent", numInfrequentTerms)
-	logger.Printf("%v terms were deemed ubiquitous", numUbiquitousTerms)
 
-	return numInfrequentTerms + numUbiquitousTerms
+	return removedTerms
 }
 
-// For each document vector (doc.tf), filters out all term Ids that are not
-// present in the provided terms map.
+// For each document, keeps *only* the term Ids within that document's term frequency
+// vector (doc.tf) that are present in the provided termLookup map.
+// The keys in the termLookup map represent the term Ids, and the values are actually
+// not read by this function.
 func filterDocVectors(docs []Document, termLookup map[int]int) {
 	for i := 0; i < len(docs); i++ {
 		doc := &docs[i]

@@ -19,7 +19,7 @@ func TestVocabulary_BasicUsage(t *testing.T) {
 	}
 }
 
-func TestWord(t *testing.T) {
+func TestVocabulary_Word(t *testing.T) {
 	id2word := map[int]string{1: "a", 2: "b", 3: "c"}
 
 	vocab := &Vocabulary{
@@ -33,7 +33,7 @@ func TestWord(t *testing.T) {
 	assert.Equal(t, "", vocab.Word(9999))
 }
 
-func TestVectorize(t *testing.T) {
+func TestVocabulary_Vectorize(t *testing.T) {
 	vocab := &Vocabulary{
 		word2id:    map[string]int{"a": 1, "b": 2, "c": 3},
 		id2word:    map[int]string{1: "a", 2: "b", 3: "c"},
@@ -49,6 +49,19 @@ func TestVectorize(t *testing.T) {
 	vec = vocab.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, true)
 	assert.Equal(t, []Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, vocab.word2id)
+}
+
+func TestVocabulary_Remove(t *testing.T) {
+	vocab := &Vocabulary{
+		word2id:    map[string]int{"a": 1, "b": 2, "c": 3},
+		id2word:    map[int]string{1: "a", 2: "b", 3: "c"},
+		nextTermId: 4,
+	}
+
+	numTermsRemoved := vocab.Remove([]Term{{Id: 1, Value: 100}, {Id: 3, Value: 300}, {Id: 4, Value: 400}})
+	assert.Equal(t, 2, numTermsRemoved)
+	assert.Equal(t, map[string]int{"b": 2}, vocab.word2id)
+	assert.Equal(t, map[int]string{2: "b"}, vocab.id2word)
 }
 
 func TestVocabulary_SaveAndLoad(t *testing.T) {

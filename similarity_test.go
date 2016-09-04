@@ -27,6 +27,25 @@ func TestTFIDF_AddDoc(t *testing.T) {
 	assert.True(t, c.needsRecalc)
 }
 
+func TestCalcDocFrequencies(t *testing.T) {
+	docs := []Document{
+		{
+			Id: 100,
+			tf: SparseVector{{10, 1}, {20, 2}, {30, 3}},
+		},
+		{
+			Id: 200,
+			tf: SparseVector{{20, 200}, {30, 300}},
+		},
+		{
+			Id: 300,
+			tf: SparseVector{{30, 300}},
+		},
+	}
+
+	assert.Equal(t, map[int]int{10: 1, 20: 2, 30: 3}, calcDocFrequencies(docs))
+}
+
 func TestNorm(t *testing.T) {
 	// sqrt(2^2 + 3^2 + 6^2) = 7
 	assert.Equal(t, 7.0, norm([]Term{{100, 2}, {101, 3}, {102, 6}}))
@@ -40,7 +59,7 @@ func TestNorm(t *testing.T) {
 
 func TestDot(t *testing.T) {
 	assert.Equal(t,
-		float64((2*4)+(3*5)), /* expected */
+		float64((2*4)+(3*5)), // expected
 		dot(
 			[]Term{{100, 2}, {101, 3}},
 			[]Term{{100, 4}, {101, 5}},
@@ -48,7 +67,7 @@ func TestDot(t *testing.T) {
 	)
 
 	assert.Equal(t,
-		float64((2*4)+(3*5)+(7*0)+(0*8)), /* expected */
+		float64((2*4)+(3*5)+(7*0)+(0*8)), // expected
 		dot(
 			[]Term{{100, 2}, {101, 3}, {102, 7}},
 			[]Term{{100, 4}, {101, 5}, {103, 8}},
@@ -56,10 +75,18 @@ func TestDot(t *testing.T) {
 	)
 
 	assert.Equal(t,
-		float64((-2*0)+(0*3)+(2*-4)), /* expected */
+		float64((-2*0)+(0*3)+(2*-4)), // expected
 		dot(
 			[]Term{{100, -2}, {101, 0}, {102, 2}},
 			[]Term{{100, 0}, {101, 3}, {102, -4}},
+		),
+	)
+
+	assert.Equal(t,
+		float64(0), // expected
+		dot(
+			[]Term{},
+			[]Term{{100, 1}, {101, 2}, {102, 3}},
 		),
 	)
 }
@@ -70,11 +97,41 @@ func TestCalcTFIDF(t *testing.T) {
 	assert.Equal(t, SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
 }
 
-func TestSortTermsByDocFreq(t *testing.T) {
-	termId2df := map[int]int{100: 10, 200: 5, 300: 2}
-	rankedTerms := sortTermsByDocFreq(termId2df)
+func TestRemoveUnimportantTerms(t *testing.T) {
+	docFreqs := map[int]int{1: 1, 2: 2, 3: 10, 4: 20, 5: 30}
+	removedTerms := removeUnimportantTerms(docFreqs, 100)
+	assert.Equal(t, map[int]int{3: 10, 4: 20}, docFreqs)
+	assert.Equal(t, 3, len(removedTerms))
+}
+
+func TestFilterDocVectors(t *testing.T) {
+	docs := []Document{
+		{
+			Id: 100,
+			tf: SparseVector{{10, 1}, {20, 2}, {30, 3}},
+		},
+		{
+			Id: 200,
+			tf: SparseVector{{20, 200}, {30, 300}, {40, 400}},
+		},
+	}
+
+	// Create a filter that specifies which term Ids are to be kept.
+	filter := map[int]int{10: 999, 30: 999, 50: 999}
+
+	filterDocVectors(docs, filter)
+
 	assert.Equal(t,
-		[]Term{{300, 2}, {200, 5}, {100, 10}},
-		rankedTerms,
+		[]Document{
+			{
+				Id: 100,
+				tf: SparseVector{{10, 1}, {30, 3}},
+			},
+			{
+				Id: 200,
+				tf: SparseVector{{30, 300}},
+			},
+		},
+		docs,
 	)
 }

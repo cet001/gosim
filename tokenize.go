@@ -1,9 +1,5 @@
 package gosim
 
-// NOTES:
-// - http://blog.christianperone.com/2011/09/machine-learning-text-feature-extraction-tf-idf-part-i
-//
-
 import (
 	"strings"
 	"unicode"

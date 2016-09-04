@@ -7,7 +7,7 @@ import (
 )
 
 // Converts an array of words (i.e. tokens like "car", "john smith") into a
-// "term frequency" feature vector where each term is assigned a unique integer
+// term frequency feature vector where each term is assigned a unique integer
 // Id and and a term frequency.
 //
 // If 'updateVocab' is true, then new encountered terms will be added to the
@@ -33,6 +33,7 @@ func NewVocabulary() *Vocabulary {
 	}
 }
 
+// Returns the number of terms in this vocabulary.
 func (me *Vocabulary) Size() int {
 	return len(me.word2id)
 }
@@ -40,6 +41,23 @@ func (me *Vocabulary) Size() int {
 func (me *Vocabulary) Word(termId int) string {
 	word, _ := me.id2word[termId]
 	return word
+}
+
+// Removes the specified terms from this vocabulary.
+// Returns the number of terms that were removed.
+func (me *Vocabulary) Remove(terms []Term) int {
+	numTermsRemoved := 0
+
+	for _, term := range terms {
+		word, found := me.id2word[term.Id]
+		if found {
+			delete(me.id2word, term.Id)
+			delete(me.word2id, word)
+			numTermsRemoved++
+		}
+	}
+
+	return numTermsRemoved
 }
 
 func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
