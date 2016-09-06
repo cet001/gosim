@@ -116,8 +116,9 @@ func TestFilterDocVectors(t *testing.T) {
 		},
 	}
 
-	// Create a filter that specifies which term Ids are to be kept.
-	filter := map[int]int{10: 999, 30: 999, 50: 999}
+	// Create a filter that specifies which term Ids are to be kept
+	someValue := 999
+	filter := map[int]int{10: someValue, 30: someValue, 50: someValue}
 
 	filterDocVectors(docs, filter)
 

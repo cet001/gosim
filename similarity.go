@@ -37,6 +37,7 @@ func (a byTermValue) Len() int           { return len(a) }
 func (a byTermValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byTermValue) Less(i, j int) bool { return a[i].Value < a[j].Value }
 
+// Anything that can be represented as a unique Id and associated score.
 type ScoredItem struct {
 	Id    int
 	Score float64
@@ -61,6 +62,7 @@ type Document struct {
 	tfidf SparseVector
 }
 
+// TF-IDF model.
 type TFIDF struct {
 	// The documents within this corpus.
 	docs []Document
@@ -135,6 +137,8 @@ func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
 	return dot(doc1_tfidf, doc2_tfidf) / (norm(doc1_tfidf) * norm(doc2_tfidf))
 }
 
+// Ranks the documents in the corpus in terms of how similar they are to the
+// specified query.
 func (me *TFIDF) SimilarDocsForText(query SparseVector) []ScoredItem {
 	me.validateState()
 

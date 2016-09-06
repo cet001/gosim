@@ -38,6 +38,7 @@ func (me *Vocabulary) Size() int {
 	return len(me.word2id)
 }
 
+// Returns the source word (token) corresponding to the the specified term Id.
 func (me *Vocabulary) Word(termId int) string {
 	word, _ := me.id2word[termId]
 	return word
@@ -60,6 +61,7 @@ func (me *Vocabulary) Remove(terms []Term) int {
 	return numTermsRemoved
 }
 
+// See the Vectorize() function def at the top of this file.
 func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {
@@ -92,6 +94,7 @@ func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
 	return terms
 }
 
+// Saves the specified Vocabulary object to a binary file.
 func SaveVocabulary(vocab *Vocabulary, filePath string) error {
 	file, err := os.Create(filePath)
 	defer file.Close()
@@ -106,6 +109,7 @@ func SaveVocabulary(vocab *Vocabulary, filePath string) error {
 	return err
 }
 
+// Loads a Vocabulary from the specified binary file.
 func LoadVocabulary(filePath string) (*Vocabulary, error) {
 	file, err := os.Open(filePath)
 	defer file.Close()
