@@ -10,18 +10,18 @@ type Term struct {
 }
 
 // Sorts terms by increasing Id.
-type byTermId []Term
+type ByTermId []Term
 
-func (a byTermId) Len() int           { return len(a) }
-func (a byTermId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byTermId) Less(i, j int) bool { return a[i].Id < a[j].Id }
+func (a ByTermId) Len() int           { return len(a) }
+func (a ByTermId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTermId) Less(i, j int) bool { return a[i].Id < a[j].Id }
 
 // Sorts terms by increasing Value.
-type byTermValue []Term
+type ByTermValue []Term
 
-func (a byTermValue) Len() int           { return len(a) }
-func (a byTermValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byTermValue) Less(i, j int) bool { return a[i].Value < a[j].Value }
+func (a ByTermValue) Len() int           { return len(a) }
+func (a ByTermValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTermValue) Less(i, j int) bool { return a[i].Value < a[j].Value }
 
 // Represents a sparse vector, where most of the elements are typically empty.
 type SparseVector []Term
@@ -53,7 +53,7 @@ func Dot(v1, v2 SparseVector) float64 {
 	return dotProduct
 }
 
-// Calculates the Euclidean norm (a.k.a. L2-norm) of the specified vector.
+// Calculates the Euclidean norm (a.k.a. L2-Norm) of the specified vector.
 func Norm(vec SparseVector) float64 {
 	sumOfSquares := 0.0
 	for i := 0; i < len(vec); i++ {
@@ -62,4 +62,34 @@ func Norm(vec SparseVector) float64 {
 	}
 
 	return math.Sqrt(sumOfSquares)
+}
+
+// Calculates a weighted mean for the specified values and associated weights.
+// this function assumes that:
+//    - x and w are are the same length
+//    - all values in x and w are non-negative
+//    - the sum of the weights is > 0
+func WeightedMean(x, w []float64) float64 {
+	sumOfWeightedValues := 0.0
+	sumOfWeights := 0.0
+	for i, xVal := range x {
+		sumOfWeightedValues += (xVal * w[i])
+		sumOfWeights += w[i]
+	}
+
+	return sumOfWeightedValues / sumOfWeights
+}
+
+// Hashes a string into an int.  This operation is useful if you want to convert
+// a weighted string vector into a SparseVector. I.e. each string s[i] in a
+// weighted vector V=[s0w0, s1w1, ...] can be converted into an int.
+func Hash(s string) int {
+	h := 1125899906842597 // prime
+	len := len(s)
+
+	for i := 0; i < len; i++ {
+		h = 31*h + int(s[i])
+	}
+
+	return h
 }

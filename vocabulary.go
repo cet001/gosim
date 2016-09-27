@@ -90,7 +90,7 @@ func (me *Vocabulary) Vectorize(words []string, updateVocab bool) []Term {
 		}
 	}
 
-	sort.Sort(byTermId(terms))
+	sort.Sort(ByTermId(terms))
 	return terms
 }
 
