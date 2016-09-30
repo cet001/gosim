@@ -54,6 +54,7 @@ func BenchmarkDot(b *testing.B) {
 
 	v1, v2 := makeRandomVector(vecSize), makeRandomVector(vecSize)
 
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Dot(v1, v2)
 	}

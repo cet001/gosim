@@ -65,7 +65,7 @@ func Norm(vec SparseVector) float64 {
 }
 
 // Calculates a weighted mean for the specified values and associated weights.
-// this function assumes that:
+// This function assumes that:
 //    - x and w are are the same length
 //    - all values in x and w are non-negative
 //    - the sum of the weights is > 0

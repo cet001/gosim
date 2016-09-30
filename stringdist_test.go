@@ -54,6 +54,7 @@ func Benchmark_JaroWinklerDist_Calc(b *testing.B) {
 		}
 	}
 
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		calcDist()
 	}
