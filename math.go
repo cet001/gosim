@@ -16,12 +16,12 @@ func (a ByTermId) Len() int           { return len(a) }
 func (a ByTermId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTermId) Less(i, j int) bool { return a[i].Id < a[j].Id }
 
-// Sorts terms by increasing Value.
-type ByTermValue []Term
+// Sorts terms by decreasing Value.
+type ByTermValueDesc []Term
 
-func (a ByTermValue) Len() int           { return len(a) }
-func (a ByTermValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByTermValue) Less(i, j int) bool { return a[i].Value < a[j].Value }
+func (a ByTermValueDesc) Len() int           { return len(a) }
+func (a ByTermValueDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTermValueDesc) Less(i, j int) bool { return a[i].Value > a[j].Value }
 
 // Represents a sparse vector, where most of the elements are typically empty.
 type SparseVector []Term
@@ -92,4 +92,31 @@ func Hash(s string) int {
 	}
 
 	return h
+}
+
+// Returns the intersection of 2 sorted []int slices.
+func Intersect(a, b []int) []int {
+	lenA, lenB := len(a), len(b)
+	intersection := make([]int, 0, min(lenA, lenB))
+
+	idx1, idx2 := 0, 0
+	for {
+		if idx1 == lenA || idx2 == lenB {
+			break
+		}
+
+		aVal, bVal := a[idx1], b[idx2]
+
+		if aVal < bVal {
+			idx1++
+		} else if bVal < aVal {
+			idx2++
+		} else {
+			intersection = append(intersection, aVal)
+			idx1++
+			idx2++
+		}
+	}
+
+	return intersection
 }

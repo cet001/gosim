@@ -1,10 +1,18 @@
 package gosim
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
+	"sort"
 	"testing"
 )
+
+func TestByTermValueDesc(t *testing.T) {
+	terms := []Term{{1, 0.01}, {2, 0.02}, {3, 0.03}}
+	sort.Sort(ByTermValueDesc(terms))
+	assert.Equal(t, []Term{{3, 0.03}, {2, 0.02}, {1, 0.01}}, terms)
+}
 
 func TestDot(t *testing.T) {
 	assert.Equal(t,
@@ -91,4 +99,45 @@ func TestHash(t *testing.T) {
 	}
 
 	assert.Equal(t, len(values), len(uniqueHashValues))
+}
+
+func TestIntersect(t *testing.T) {
+	assert.Equal(t, []int{}, Intersect([]int{}, []int{}))
+	assert.Equal(t, []int{}, Intersect(nil, nil))
+	assert.Equal(t, []int{}, Intersect([]int{}, []int{1, 2, 3}))
+	assert.Equal(t, []int{}, Intersect([]int{1, 2, 3}, []int{}))
+	assert.Equal(t, []int{}, Intersect([]int{1, 2}, []int{3, 4}))
+
+	assert.Equal(t, []int{1}, Intersect([]int{1, 2, 3}, []int{1, 4}))
+	assert.Equal(t, []int{1, 3}, Intersect([]int{1, 2, 3}, []int{1, 3, 4}))
+	assert.Equal(t, []int{2, 3}, Intersect([]int{1, 2, 3}, []int{2, 3, 4}))
+	assert.Equal(t, []int{2, 3}, Intersect([]int{2, 3, 4}, []int{1, 2, 3}))
+
+	assert.Equal(t, []int{1, 2, 3}, Intersect([]int{1, 2, 3}, []int{1, 2, 3}))
+}
+
+func BenchmarkIntersect_Small(b *testing.B) {
+	setA, setB := make([]int, 1000), make([]int, 1000)
+	fmt.Printf("len(a)=%v, len(b)=%v\n", len(setA), len(setB))
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		Intersect(
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			[]int{1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25},
+		)
+	}
+}
+
+func BenchmarkIntersect_Big(b *testing.B) {
+	setA, setB := make([]int, 1000), make([]int, 1000)
+	for i := 0; i < len(setA); i++ {
+		setA[i] = i
+		setB[i] = i + (len(setA) / 3)
+	}
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		Intersect(setA, setB)
+	}
 }
