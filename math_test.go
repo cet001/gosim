@@ -101,6 +101,19 @@ func TestHash(t *testing.T) {
 	assert.Equal(t, len(values), len(uniqueHashValues))
 }
 
+func TestUniq(t *testing.T) {
+	assert.Equal(t, []int{}, Uniq(nil))
+	assert.Equal(t, []int{}, Uniq([]int{}))
+	assert.Equal(t, []int{1}, Uniq([]int{1}))
+	assert.Equal(t, []int{1, 3, 5}, Uniq([]int{1, 3, 5}))
+
+	assert.Equal(t, []int{1}, Uniq([]int{1, 1, 1}))
+	assert.Equal(t, []int{1, 5}, Uniq([]int{1, 1, 5}))
+	assert.Equal(t, []int{1, 5}, Uniq([]int{1, 5, 5}))
+	assert.Equal(t, []int{1, 3, 5}, Uniq([]int{1, 3, 3, 3, 5}))
+	assert.Equal(t, []int{1, 3, 5}, Uniq([]int{1, 1, 3, 3, 3, 5, 5, 5, 5, 5, 5}))
+}
+
 func TestIntersect(t *testing.T) {
 	assert.Equal(t, []int{}, Intersect([]int{}, []int{}))
 	assert.Equal(t, []int{}, Intersect(nil, nil))

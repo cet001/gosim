@@ -94,6 +94,29 @@ func Hash(s string) int {
 	return h
 }
 
+// Similar to the Unix 'uniq' command, this function removes all dupicates from
+// a sorted array of int values.
+func Uniq(sortedValues []int) []int {
+	if sortedValues == nil {
+		return []int{}
+	}
+
+	if len(sortedValues) <= 1 {
+		return sortedValues
+	}
+
+	uniqueValues := make([]int, 0, len(sortedValues))
+	uniqueValues = append(uniqueValues, sortedValues[0])
+
+	for i := 1; i < len(sortedValues); i++ {
+		if sortedValues[i] != sortedValues[i-1] {
+			uniqueValues = append(uniqueValues, sortedValues[i])
+		}
+	}
+
+	return uniqueValues
+}
+
 // Returns the intersection of 2 sorted []int slices.
 func Intersect(a, b []int) []int {
 	lenA, lenB := len(a), len(b)
