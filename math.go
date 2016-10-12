@@ -117,7 +117,9 @@ func Uniq(sortedValues []int) []int {
 	return uniqueValues
 }
 
-// Returns the intersection of 2 sorted []int slices.
+// Returns the intersection of 2 sorted sets.
+// Unpredicatable results ensue if a or b contain duplicate elements or are not
+// in ascending sorted order.
 func Intersect(a, b []int) []int {
 	lenA, lenB := len(a), len(b)
 	intersection := make([]int, 0, min(lenA, lenB))
@@ -142,4 +144,39 @@ func Intersect(a, b []int) []int {
 	}
 
 	return intersection
+}
+
+// Binary merge of sorted sets a and b.
+// Unpredicatable results ensue if a or b contain duplicate elements or are not
+// in ascending sorted order.
+func Union(a, b []int) []int {
+	lenA, lenB := len(a), len(b)
+	union := make([]int, 0, max(lenA, lenB))
+
+	idx1, idx2 := 0, 0
+	for {
+		if idx1 == lenA {
+			union = append(union, b[idx2:]...)
+			break
+		} else if idx2 == lenB {
+			union = append(union, a[idx1:]...)
+			break
+		}
+
+		aVal, bVal := a[idx1], b[idx2]
+
+		if aVal < bVal {
+			union = append(union, aVal)
+			idx1++
+		} else if bVal < aVal {
+			union = append(union, bVal)
+			idx2++
+		} else {
+			union = append(union, aVal)
+			idx1++
+			idx2++
+		}
+	}
+
+	return union
 }

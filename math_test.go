@@ -129,6 +129,17 @@ func TestIntersect(t *testing.T) {
 	assert.Equal(t, []int{1, 2, 3}, Intersect([]int{1, 2, 3}, []int{1, 2, 3}))
 }
 
+func TestUnion(t *testing.T) {
+	assert.Equal(t, []int{}, Union([]int{}, []int{}))
+	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, []int{}))
+	assert.Equal(t, []int{1, 2}, Union([]int{}, []int{1, 2}))
+	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, []int{1, 2}))
+	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2, 3, 4}, []int{1, 2}))
+	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2}, []int{1, 2, 3, 4}))
+	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2, 3, 4}, []int{2, 3}))
+	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 3}, []int{2, 4}))
+}
+
 func BenchmarkIntersect_Small(b *testing.B) {
 	setA, setB := make([]int, 1000), make([]int, 1000)
 	fmt.Printf("len(a)=%v, len(b)=%v\n", len(setA), len(setB))
