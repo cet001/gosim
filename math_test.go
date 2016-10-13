@@ -118,6 +118,7 @@ func TestIntersect(t *testing.T) {
 	assert.Equal(t, []int{}, Intersect([]int{}, []int{}))
 	assert.Equal(t, []int{}, Intersect(nil, nil))
 	assert.Equal(t, []int{}, Intersect([]int{}, []int{1, 2, 3}))
+	assert.Equal(t, []int{}, Intersect(nil, []int{1, 2, 3}))
 	assert.Equal(t, []int{}, Intersect([]int{1, 2, 3}, []int{}))
 	assert.Equal(t, []int{}, Intersect([]int{1, 2}, []int{3, 4}))
 
@@ -132,6 +133,7 @@ func TestIntersect(t *testing.T) {
 func TestUnion(t *testing.T) {
 	assert.Equal(t, []int{}, Union([]int{}, []int{}))
 	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, []int{}))
+	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, nil))
 	assert.Equal(t, []int{1, 2}, Union([]int{}, []int{1, 2}))
 	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, []int{1, 2}))
 	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2, 3, 4}, []int{1, 2}))
