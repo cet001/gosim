@@ -53,7 +53,7 @@ func TestRefinedSoundex(t *testing.T) {
 		"Caron":     "C30908",
 		"Lambard":   "L7081096",
 		"Lambert":   "L7081096",
-		"Lambert":   "L7081096",
+		"Lampert":   "L7081096",
 		"Lamport":   "L7081096",
 		"Robert":    "R901096",
 		"Rupert":    "R901096",
@@ -67,5 +67,19 @@ func TestRefinedSoundex(t *testing.T) {
 
 	for w, expectedCode := range words {
 		assert.Equal(t, expectedCode, RefinedSoundex(w))
+	}
+}
+
+func Benchmark_RefinedSoundex(b *testing.B) {
+	words := []string{
+		"a", "cat", "catastrophe", "baseball", "dandelion", "elephant",
+		"foggy", "ghost", "hangover", "illegal",
+	}
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for _, w := range words {
+			RefinedSoundex(w)
+		}
 	}
 }
