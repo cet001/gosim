@@ -1,7 +1,6 @@
 package gosim
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"sort"
@@ -115,55 +114,165 @@ func TestUniq(t *testing.T) {
 }
 
 func TestIntersect(t *testing.T) {
-	assert.Equal(t, []int{}, Intersect([]int{}, []int{}))
-	assert.Equal(t, []int{}, Intersect(nil, nil))
-	assert.Equal(t, []int{}, Intersect([]int{}, []int{1, 2, 3}))
-	assert.Equal(t, []int{}, Intersect(nil, []int{1, 2, 3}))
-	assert.Equal(t, []int{}, Intersect([]int{1, 2, 3}, []int{}))
-	assert.Equal(t, []int{}, Intersect([]int{1, 2}, []int{3, 4}))
+	type TestSet struct {
+		a, b, expected []int
+	}
 
-	assert.Equal(t, []int{1}, Intersect([]int{1, 2, 3}, []int{1, 4}))
-	assert.Equal(t, []int{1, 3}, Intersect([]int{1, 2, 3}, []int{1, 3, 4}))
-	assert.Equal(t, []int{2, 3}, Intersect([]int{1, 2, 3}, []int{2, 3, 4}))
-	assert.Equal(t, []int{2, 3}, Intersect([]int{2, 3, 4}, []int{1, 2, 3}))
+	testSets := []TestSet{
+		{
+			a:        []int{},
+			b:        []int{},
+			expected: []int{},
+		},
+		{
+			a:        nil,
+			b:        nil,
+			expected: []int{},
+		},
+		{
+			a:        []int{},
+			b:        []int{1, 2, 3},
+			expected: []int{},
+		},
+		{
+			a:        nil,
+			b:        []int{1, 2, 3},
+			expected: []int{},
+		},
+		{
+			a:        []int{1, 2, 3},
+			b:        []int{},
+			expected: []int{},
+		},
+		{
+			a:        []int{1, 2},
+			b:        []int{3, 4},
+			expected: []int{},
+		},
+		{
+			a:        []int{1, 2, 3},
+			b:        []int{1, 4},
+			expected: []int{1},
+		},
+		{
+			a:        []int{1, 2, 3},
+			b:        []int{1, 3, 4},
+			expected: []int{1, 3},
+		},
+		{
+			a:        []int{1, 2, 3},
+			b:        []int{2, 3, 4},
+			expected: []int{2, 3},
+		},
+		{
+			a:        []int{2, 3, 4},
+			b:        []int{1, 2, 3},
+			expected: []int{2, 3},
+		},
+		{
+			a:        []int{1, 2, 3},
+			b:        []int{1, 2, 3},
+			expected: []int{1, 2, 3},
+		},
+	}
 
-	assert.Equal(t, []int{1, 2, 3}, Intersect([]int{1, 2, 3}, []int{1, 2, 3}))
+	for _, testSet := range testSets {
+		assert.Equal(t, testSet.expected, Intersect(testSet.a, testSet.b, nil))
+	}
+
+	intersection := make([]int, 1000)
+	for _, testSet := range testSets {
+		assert.Equal(t, testSet.expected, Intersect(testSet.a, testSet.b, intersection))
+	}
 }
 
 func TestUnion(t *testing.T) {
-	assert.Equal(t, []int{}, Union([]int{}, []int{}))
-	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, []int{}))
-	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, nil))
-	assert.Equal(t, []int{1, 2}, Union([]int{}, []int{1, 2}))
-	assert.Equal(t, []int{1, 2}, Union([]int{1, 2}, []int{1, 2}))
-	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2, 3, 4}, []int{1, 2}))
-	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2}, []int{1, 2, 3, 4}))
-	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 2, 3, 4}, []int{2, 3}))
-	assert.Equal(t, []int{1, 2, 3, 4}, Union([]int{1, 3}, []int{2, 4}))
+	type TestSet struct {
+		a, b, expected []int
+	}
+
+	testSets := []TestSet{
+		{
+			a:        []int{},
+			b:        []int{},
+			expected: []int{},
+		},
+		{
+			a:        []int{1, 2},
+			b:        []int{},
+			expected: []int{1, 2},
+		},
+		{
+			a:        []int{1, 2},
+			b:        nil,
+			expected: []int{1, 2},
+		},
+		{
+			a:        []int{},
+			b:        []int{1, 2},
+			expected: []int{1, 2},
+		},
+		{
+			a:        []int{1, 2},
+			b:        []int{1, 2},
+			expected: []int{1, 2},
+		},
+		{
+			a:        []int{1, 2, 3, 4},
+			b:        []int{1, 2},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			a:        []int{1, 2},
+			b:        []int{1, 2, 3, 4},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			a:        []int{1, 2, 3, 4},
+			b:        []int{2, 3},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			a:        []int{1, 3},
+			b:        []int{2, 4},
+			expected: []int{1, 2, 3, 4},
+		},
+	}
+
+	for _, testSet := range testSets {
+		assert.Equal(t, testSet.expected, Union(testSet.a, testSet.b, nil))
+	}
+
+	union := make([]int, 1000)
+	for _, testSet := range testSets {
+		assert.Equal(t, testSet.expected, Union(testSet.a, testSet.b, union))
+	}
 }
 
 func BenchmarkIntersect_Small(b *testing.B) {
-	setA, setB := make([]int, 1000), make([]int, 1000)
-	fmt.Printf("len(a)=%v, len(b)=%v\n", len(setA), len(setB))
-
+	workspace := make([]int, 1000)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Intersect(
 			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
 			[]int{1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25},
+			workspace,
 		)
 	}
 }
 
 func BenchmarkIntersect_Big(b *testing.B) {
-	setA, setB := make([]int, 1000), make([]int, 1000)
+	size := 1000
+	setA, setB := make([]int, size), make([]int, size)
 	for i := 0; i < len(setA); i++ {
 		setA[i] = i
 		setB[i] = i + (len(setA) / 3)
 	}
 
+	workspace := make([]int, size)
+
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		Intersect(setA, setB)
+		Intersect(setA, setB, workspace)
 	}
 }
