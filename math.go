@@ -118,11 +118,23 @@ func Uniq(sortedValues []int) []int {
 }
 
 // Returns the intersection of 2 sorted sets.
-// Unpredicatable results ensue if a or b contain duplicate elements or are not
-// in ascending sorted order.
-func Intersect(a, b []int) []int {
+//
+// a and b are the sets to be intersected.
+//
+// target is an optional slice into which the intersecting elements from a and b
+// are appended.  If this param is nil, a new []int slice will be created.
+//
+// WARNING: Unpredicatable results ensue if a or b contain duplicate elements or
+// are not in ascending sorted order.
+func Intersect(a, b, target []int) []int {
 	lenA, lenB := len(a), len(b)
-	intersection := make([]int, 0, min(lenA, lenB))
+
+	var intersection []int
+	if target == nil {
+		intersection = make([]int, 0, min(lenA, lenB))
+	} else {
+		intersection = target[:0]
+	}
 
 	idx1, idx2 := 0, 0
 	for {
@@ -146,12 +158,28 @@ func Intersect(a, b []int) []int {
 	return intersection
 }
 
+// Returns the union of 2 sorted sets.
+//
+// a and b are the sets to be unioned.
+//
+// target is an optional slice into which the unique  elements from a and b are
+// appended.  If this param is nil, a new []int slice will be created.
+//
+// WARNING: Unpredicatable results ensue if a or b contain duplicate elements or
+// are not in ascending sorted order.
+
 // Binary merge of sorted sets a and b.
 // Unpredicatable results ensue if a or b contain duplicate elements or are not
 // in ascending sorted order.
-func Union(a, b []int) []int {
+func Union(a, b, target []int) []int {
 	lenA, lenB := len(a), len(b)
-	union := make([]int, 0, max(lenA, lenB))
+
+	var union []int
+	if target == nil {
+		union = make([]int, 0, max(lenA, lenB))
+	} else {
+		union = target[:0]
+	}
 
 	idx1, idx2 := 0, 0
 	for {
