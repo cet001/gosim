@@ -1,11 +1,25 @@
 package gosim
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestJaroWinklerDist_CalcString(t *testing.T) {
+func ExampleJaroWinklerDist_CalcString() {
+	dist := NewJaroWinklerDist()
+	fmt.Println(dist.CalcString("andrew", "andrew"))
+	fmt.Println(dist.CalcString("martha", "marhta"))
+	fmt.Println(dist.CalcString("jones", "johnson"))
+	fmt.Println(dist.CalcString("foo", "bar"))
+	// Output:
+	// 1
+	// 0.9611111111111111
+	// 0.8323809523809523
+	// 0
+}
+
+func TestJaroWinklerDist_CalcString3(t *testing.T) {
 	dist := NewJaroWinklerDist()
 
 	assert.Equal(t, 0.0, dist.CalcString("", ""))

@@ -2,25 +2,26 @@ package gosim
 
 // Calculates the Jaro-Winkler string distance (similarity) score.
 // Based on the Wikipedia description: https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance.
-type JaroWinkerDist struct {
+type JaroWinklerDist struct {
 	s1matches   []bool
 	s2matches   []bool
 	prefixScale float64
 }
 
-func NewJaroWinklerDist() *JaroWinkerDist {
+func NewJaroWinklerDist() *JaroWinklerDist {
 	maxStringLen := 1024 * 4 // size of working space
 
-	return &JaroWinkerDist{
+	return &JaroWinklerDist{
 		s1matches:   make([]bool, maxStringLen),
 		s2matches:   make([]bool, maxStringLen),
 		prefixScale: 0.1,
 	}
 }
 
-// Returns the  Jaro-Winkler distance score for s1 and s2.
-// WARNING: This call is NOT threadsafe!
-func (me *JaroWinkerDist) CalcString(s1, s2 string) float64 {
+// Returns the Jaro-Winkler distance score for s1 and s2.
+//
+// WARNING: This method is NOT threadsafe!
+func (me *JaroWinklerDist) CalcString(s1, s2 string) float64 {
 	lenS1, lenS2 := len(s1), len(s2)
 	maxMatchDist := (max(lenS1, lenS2) / 2) - 1
 	s1matches, s2matches := me.s1matches, me.s2matches
@@ -82,9 +83,12 @@ func (me *JaroWinkerDist) CalcString(s1, s2 string) float64 {
 	return jaroWinklerDist
 }
 
-// Returns the  Jaro-Winkler distance score for s1 and s2.
-// WARNING: This call is NOT threadsafe!
-func (me *JaroWinkerDist) Calc(s1, s2 []byte) float64 {
+// Returns the  Jaro-Winkler distance score for s1 and s2.  This method is
+// approximately 20% faster than CalcString(string,string) due to the use of
+// []byte instead of string as the data type for the terms being compared.
+//
+// WARNING: This method is NOT threadsafe!
+func (me *JaroWinklerDist) Calc(s1, s2 []byte) float64 {
 	lenS1, lenS2 := len(s1), len(s2)
 	maxMatchDist := (max(lenS1, lenS2) / 2) - 1
 	s1matches, s2matches := me.s1matches, me.s2matches

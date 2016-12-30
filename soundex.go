@@ -8,8 +8,9 @@ import (
 // Implements the American Soundex algorithm.
 //
 // See https://en.wikipedia.org/wiki/Soundex
-// Based on https://github.com/dotcypress/phonetics/blob/master/soundex.go
 func Soundex(word string) string {
+	// Based on https://github.com/dotcypress/phonetics/blob/master/soundex.go
+
 	// Trivial case
 	if len(word) == 0 {
 		return "0000"
@@ -54,7 +55,7 @@ func Soundex(word string) string {
 }
 
 // Implments the 'Refined Soundex' algorithm (a veriation on the original
-// 'American Soundex' algorithm, which has fewer collisions and is typiucally
+// 'American Soundex' algorithm, which has fewer collisions and is typically
 // more suited for spellchecking situations).
 //
 // See http://ntz-develop.blogspot.com/2011/03/phonetic-algorithms.html

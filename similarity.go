@@ -165,7 +165,10 @@ func calcTFIDF(termFreqs SparseVector, idfs SparseHashVector) SparseVector {
 	tfidf := make([]Term, len(termFreqs))
 	for i := 0; i < len(termFreqs); i++ {
 		term := &termFreqs[i]
-		tfidf[i] = Term{Id: term.Id, Value: (term.Value * idfs[term.Id])}
+		tfidf[i] = Term{
+			Id:    term.Id,
+			Value: (term.Value * idfs[term.Id]),
+		}
 	}
 
 	return tfidf

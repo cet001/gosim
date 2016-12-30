@@ -1,9 +1,22 @@
 package gosim
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func ExampleSoundex() {
+	for _, name := range []string{"Robert", "Rupert", "Romulan", "Larry", "Lori"} {
+		fmt.Println(name + " -> " + Soundex(name))
+	}
+	// Output:
+	// Robert -> R163
+	// Rupert -> R163
+	// Romulan -> R545
+	// Larry -> L600
+	// Lori -> L600
+}
 
 func TestSoundex(t *testing.T) {
 	// Using examples from the Wikipedia page on 'Soundex'
@@ -40,6 +53,19 @@ func Benchmark_Soundex(b *testing.B) {
 			Soundex(w)
 		}
 	}
+}
+
+func ExampleRefinedSoundex() {
+	for _, name := range []string{"Braz", "Broz", "Robert", "Rupert", "Rubin", "R_u_b_i_n"} {
+		fmt.Println(name + " -> " + RefinedSoundex(name))
+	}
+	// Output:
+	// Braz -> B1905
+	// Broz -> B1905
+	// Robert -> R901096
+	// Rupert -> R901096
+	// Rubin -> R90108
+	// R_u_b_i_n -> R90108
 }
 
 func TestRefinedSoundex(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"math"
 )
 
+// Term represents a token (typically a word) having a unique ID within a document.
 type Term struct {
 	Id    int
 	Value float64
@@ -26,7 +27,8 @@ func (a ByTermValueDesc) Less(i, j int) bool { return a[i].Value > a[j].Value }
 // Represents a sparse vector, where most of the elements are typically empty.
 type SparseVector []Term
 
-// Calculates the dot product of vectors v1 and v2.
+// Calculates the dot product of two sparse vectors.  Dot() assumes that v1 and
+// v2 are in sorted order by Term.Id.
 func Dot(v1, v2 SparseVector) float64 {
 	var dotProduct float64 = 0.0
 	lenV1, lenV2 := len(v1), len(v2)
@@ -64,11 +66,12 @@ func Norm(vec SparseVector) float64 {
 	return math.Sqrt(sumOfSquares)
 }
 
-// Calculates a weighted mean for the specified values and associated weights.
+// Calculates a weighted mean for the specified values in []x and associated
+// weights in []w.
+//
 // This function assumes that:
 //    - x and w are are the same length
 //    - all values in x and w are non-negative
-//    - the sum of the weights is > 0
 func WeightedMean(x, w []float64) float64 {
 	sumOfWeightedValues := 0.0
 	sumOfWeights := 0.0
@@ -122,7 +125,7 @@ func Uniq(sortedValues []int) []int {
 // a and b are the sets to be intersected.
 //
 // target is an optional slice into which the intersecting elements from a and b
-// are appended.  If this param is nil, a new []int slice will be created.
+// are appended.  If target is nil, a new []int slice will be created and returned.
 //
 // WARNING: Unpredicatable results ensue if a or b contain duplicate elements or
 // are not in ascending sorted order.

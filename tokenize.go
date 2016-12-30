@@ -6,7 +6,7 @@ import (
 )
 
 // Function definition for transforming unstructured document text into a list
-// of tokens.  For example, given a Tokenize function that splits strictly on
+// of tokens.  For example, given a Tokenize() function that splits strictly on
 // whitespace, we would expect this:
 //
 //     tokenize("less is more")  // returns []string{"less", "is", "more"}
