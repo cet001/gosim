@@ -14,6 +14,7 @@ import (
 
 var logger = log.New(os.Stderr, "[gosim] ", (log.Ldate | log.Ltime | log.Lshortfile))
 
+// Sparse vector represented by a mapping of term IDs to corresponding term values.
 type SparseHashVector map[int]float64
 
 // Anything that can be represented as a unique Id and associated score.

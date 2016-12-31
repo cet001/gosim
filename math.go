@@ -10,14 +10,14 @@ type Term struct {
 	Value float64
 }
 
-// Sorts terms by increasing Id.
+// Sorts Term objects by increasing Term.Id.
 type ByTermId []Term
 
 func (a ByTermId) Len() int           { return len(a) }
 func (a ByTermId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTermId) Less(i, j int) bool { return a[i].Id < a[j].Id }
 
-// Sorts terms by decreasing Value.
+// Sorts Term objects by decreasing Term.Value.
 type ByTermValueDesc []Term
 
 func (a ByTermValueDesc) Len() int           { return len(a) }
@@ -25,6 +25,27 @@ func (a ByTermValueDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTermValueDesc) Less(i, j int) bool { return a[i].Value > a[j].Value }
 
 // Represents a sparse vector, where most of the elements are typically empty.
+// For example, consider the following vector containing 10 elements:
+//
+//   v = [9 0 0 2 0 0 0 0 7 0]
+//
+// Only elements 0, 3, and 8 (base-0) contain non-zero values -- the remaining
+// elements are "empty".  The following sparse vector is equivalent to the above
+// vector:
+//
+//   sv := SparseVector{{0, 9}, {3, 2}, {8, 7}}
+//
+// Each element in the SparseVector is a Term object that specifies the element's
+// value (Term.Value) and position (Term.Id) within the vector.  Note that the
+// SparseVector declaration above is a shorthand syntax; it can also be declared
+// more formally like this:
+//
+//   sv := SparseVector{
+//	   Term{Id: 0, Value: 9},
+//	   Term{Id: 3, Value: 2},
+//	   Term{Id: 8, Value: 7},
+//   }
+//
 type SparseVector []Term
 
 // Calculates the dot product of two sparse vectors.  Dot() assumes that v1 and

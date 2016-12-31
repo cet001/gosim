@@ -6,15 +6,14 @@ import (
 	"sort"
 )
 
-// Converts an array of words (i.e. tokens like "car", "john smith") into a
-// term frequency feature vector where each term is assigned a unique integer
-// Id and and a term frequency.
+// Vectorize() converts an array of words (tokens like "car" or "john smith")
+// into a term frequency feature vector where each term is assigned a unique
+// integer Id and term frequency.
 //
 // If 'updateVocab' is true, then new encountered terms will be added to the
 // underlying Vocablulary.
 //
 // Must return the array of terms SORTED by increasing Term.Id.
-//
 type Vectorize func(words []string, updateVocab bool) []Term
 
 // Manages the vocabulary (i.e. the set of distinct terms) for a given corpus.
