@@ -15,6 +15,7 @@ import (
 var logger = log.New(os.Stderr, "[gosim] ", (log.Ldate | log.Ltime | log.Lshortfile))
 
 // Sparse vector represented by a mapping of term IDs to corresponding term values.
+// This is essentially the hashmap version of the SparseVector type.
 type sparseHashVector map[int]float64
 
 // Anything that can be represented as a unique Id and associated score.
@@ -105,7 +106,9 @@ func (me *TFIDF) Train() []Term {
 	return unimportantTerms
 }
 
-// Calculates a similarity score indicating how similar douments doc1 and doc2 are.
+// Calculates a similarity score indicating how similar documents doc1 and doc2
+// to each other.
+//
 // Returns a score in the range [0.0..1.0], where 1.0 means the documents are
 // identical.
 func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
