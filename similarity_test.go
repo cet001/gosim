@@ -48,7 +48,7 @@ func TestCalcDocFrequencies(t *testing.T) {
 
 func TestCalcTFIDF(t *testing.T) {
 	tf := SparseVector{{10, 10}, {40, 40}, {50, 50}}
-	idf := SparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
+	idf := sparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
 	assert.Equal(t, SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
 }
 

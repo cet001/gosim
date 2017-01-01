@@ -1,11 +1,31 @@
 package gosim
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
+	"sort"
 	"testing"
 )
+
+func ExampleVocabulary() {
+	vocab := NewVocabulary()
+	doc := []string{"row", "row", "row", "your", "boat"}
+	termvec := vocab.Vectorize(doc, true)
+
+	fmt.Printf("Vocabulary has %v distinct terms\n", vocab.Size())
+
+	sort.Sort(ByTermValueDesc(termvec))
+	for _, term := range termvec {
+		fmt.Printf("'%v' has %v occurences\n", vocab.Word(term.Id), term.Value)
+	}
+	// Output:
+	// Vocabulary has 3 distinct terms
+	// 'row' has 3 occurences
+	// 'your' has 1 occurences
+	// 'boat' has 1 occurences
+}
 
 func TestVocabulary_BasicUsage(t *testing.T) {
 	vocab := NewVocabulary()

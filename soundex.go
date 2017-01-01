@@ -54,7 +54,7 @@ func Soundex(word string) string {
 	}
 }
 
-// Implments the 'Refined Soundex' algorithm (a veriation on the original
+// Implments the 'Refined Soundex' algorithm (a variation on the original
 // 'American Soundex' algorithm, which has fewer collisions and is typically
 // more suited for spellchecking situations).
 //

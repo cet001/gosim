@@ -15,7 +15,7 @@ import (
 var logger = log.New(os.Stderr, "[gosim] ", (log.Ldate | log.Ltime | log.Lshortfile))
 
 // Sparse vector represented by a mapping of term IDs to corresponding term values.
-type SparseHashVector map[int]float64
+type sparseHashVector map[int]float64
 
 // Anything that can be represented as a unique Id and associated score.
 type ScoredItem struct {
@@ -48,7 +48,7 @@ type TFIDF struct {
 	docs []Document
 
 	// idf[x] -> the inverse document frequency of term x.
-	idf SparseHashVector
+	idf sparseHashVector
 
 	// Whenever new documents are added to this corpus, the global stats need to
 	// be recalculated (via Recalculate()).  This flag keeps track of this state.
@@ -86,7 +86,7 @@ func (me *TFIDF) Train() []Term {
 
 	logger.Printf("Calculating IDF values for %v terms.", len(df))
 	startTime = time.Now()
-	me.idf = make(SparseHashVector, len(df))
+	me.idf = make(sparseHashVector, len(df))
 	totalDocs := float64(len(me.docs))
 	for termId, df := range df {
 		me.idf[termId] = 1.0 + math.Log(totalDocs/float64(df))
@@ -146,8 +146,8 @@ func (me *TFIDF) validateState() {
 	}
 }
 
-// Calculates the document frequency for each distinct term contained in the
-// specified list of documents.
+// Calculates the document frequency for each distinct term withn the specified
+// document set.
 func calcDocFrequencies(docs []Document) map[int]int {
 	df := make(map[int]int, 1000000)
 	for i := 0; i < len(docs); i++ {
@@ -162,7 +162,7 @@ func calcDocFrequencies(docs []Document) map[int]int {
 
 // termFreqs = term frequencies
 // idfs = vector of inverse document frequencies for each term in the corpus.
-func calcTFIDF(termFreqs SparseVector, idfs SparseHashVector) SparseVector {
+func calcTFIDF(termFreqs SparseVector, idfs sparseHashVector) SparseVector {
 	tfidf := make([]Term, len(termFreqs))
 	for i := 0; i < len(termFreqs); i++ {
 		term := &termFreqs[i]
@@ -179,8 +179,9 @@ func removeUnimportantTerms(docFreqs map[int]int, numDocs int) []Term {
 	removedTerms := make([]Term, 0, 100000)
 
 	for termId, docFreq := range docFreqs {
-		isUnimportantTerm := (docFreq <= 3 || ((float64(docFreq) / float64(numDocs)) > 0.20))
-		if isUnimportantTerm {
+		isRareInCorpus := docFreq <= 3
+		isStopWord := (float64(docFreq) / float64(numDocs)) > 0.20
+		if isRareInCorpus || isStopWord {
 			delete(docFreqs, termId)
 			removedTerms = append(removedTerms, Term{Id: termId, Value: float64(docFreq)})
 		}
@@ -190,9 +191,8 @@ func removeUnimportantTerms(docFreqs map[int]int, numDocs int) []Term {
 }
 
 // For each document, keeps *only* the term Ids within that document's term frequency
-// vector (doc.tf) that are present in the provided termLookup map.
-// The keys in the termLookup map represent the term Ids, and the values are actually
-// not read by this function.
+// vector (doc.tf) that are present in the provided termLookup map.  The keys in
+// the termLookup map represent the term Ids, and the values are not used.
 func filterDocVectors(docs []Document, termLookup map[int]int) {
 	for i := 0; i < len(docs); i++ {
 		doc := &docs[i]

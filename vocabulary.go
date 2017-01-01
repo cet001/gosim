@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// Vectorize() converts an array of words (tokens like "car" or "john smith")
+// Vectorize() converts an array of words (terms like "car" or "john smith")
 // into a term frequency feature vector where each term is assigned a unique
 // integer Id and term frequency.
 //
@@ -32,7 +32,7 @@ func NewVocabulary() *Vocabulary {
 	}
 }
 
-// Returns the number of terms in this vocabulary.
+// Returns the number of words in this vocabulary.
 func (me *Vocabulary) Size() int {
 	return len(me.word2id)
 }
