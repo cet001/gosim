@@ -193,9 +193,10 @@ func removeUnimportantTerms(docFreqs map[int]int, numDocs int) []Term {
 	return removedTerms
 }
 
-// For each document, keeps *only* the term Ids within that document's term frequency
-// vector (doc.tf) that are present in the provided termLookup map.  The keys in
-// the termLookup map represent the term Ids, and the values are not used.
+// For each document in []docs, keeps *only* the term Ids within that document's
+// term frequency vector (doc.tf) that are present in the provided termLookup
+// map.  The keys in the termLookup map represent the term Ids, and the values
+// are not used.
 func filterDocVectors(docs []Document, termLookup map[int]int) {
 	for i := 0; i < len(docs); i++ {
 		doc := &docs[i]

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func ExampleJaroWinklerDist_CalcString() {
+func ExampleJaroWinklerDist() {
 	dist := NewJaroWinklerDist()
 	fmt.Println(dist.CalcString("andrew", "andrew"))
 	fmt.Println(dist.CalcString("martha", "marhta"))
@@ -19,7 +19,7 @@ func ExampleJaroWinklerDist_CalcString() {
 	// 0
 }
 
-func TestJaroWinklerDist_CalcString3(t *testing.T) {
+func TestJaroWinklerDist_CalcString(t *testing.T) {
 	dist := NewJaroWinklerDist()
 
 	assert.Equal(t, 0.0, dist.CalcString("", ""))

@@ -60,7 +60,7 @@ func (me *Dictionary) Remove(terms []Term) int {
 	return numTermsRemoved
 }
 
-// See the Vectorize() function def at the top of this file.
+// See the Vectorize() function type definition for usage details.
 func (me *Dictionary) Vectorize(words []string, updateDict bool) []Term {
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {

@@ -56,7 +56,8 @@ func Benchmark_Soundex(b *testing.B) {
 }
 
 func ExampleRefinedSoundex() {
-	for _, name := range []string{"Braz", "Broz", "Robert", "Rupert", "Rubin", "R_u_b_i_n"} {
+	names := []string{"Braz", "Broz", "Robert", "Rupert", "Rubin", "R_u_b_i_n"}
+	for _, name := range names {
 		fmt.Println(name + " -> " + RefinedSoundex(name))
 	}
 	// Output:

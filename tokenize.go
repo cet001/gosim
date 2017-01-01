@@ -9,7 +9,7 @@ import (
 // of tokens.  For example, given a Tokenize() function that splits strictly on
 // whitespace, we would expect this:
 //
-//     tokenize("less is more")  // returns []string{"less", "is", "more"}
+//     tokenize("less is more")  // -> ["less" "is" "more"]
 //
 type Tokenize func(text string) []string
 
