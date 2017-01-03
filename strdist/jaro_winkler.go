@@ -1,4 +1,8 @@
-package gosim
+package strdist
+
+import (
+	"github.com/cet001/gosim/math"
+)
 
 // Calculates the Jaro-Winkler string distance (similarity) score.
 // Based on the Wikipedia description: https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance.
@@ -23,11 +27,11 @@ func NewJaroWinklerDist() *JaroWinklerDist {
 // WARNING: This method is NOT threadsafe!
 func (me *JaroWinklerDist) CalcString(s1, s2 string) float64 {
 	lenS1, lenS2 := len(s1), len(s2)
-	maxMatchDist := (max(lenS1, lenS2) / 2) - 1
+	maxMatchDist := (math.Max(lenS1, lenS2) / 2) - 1
 	s1matches, s2matches := me.s1matches, me.s2matches
 
 	// Clear the working space
-	for i := 0; i < max(lenS1, lenS2); i++ {
+	for i := 0; i < math.Max(lenS1, lenS2); i++ {
 		s1matches[i] = false
 		s2matches[i] = false
 	}
@@ -36,7 +40,7 @@ func (me *JaroWinklerDist) CalcString(s1, s2 string) float64 {
 	m := float64(0)
 	for i := 0; i < lenS1; i++ {
 		ch1 := s1[i]
-		left, right := max(0, i-maxMatchDist), min(lenS2, i+maxMatchDist+1)
+		left, right := math.Max(0, i-maxMatchDist), math.Min(lenS2, i+maxMatchDist+1)
 		for j := left; j < right; j++ {
 			ch2 := s2[j]
 			if ch1 == ch2 && !s2matches[j] {
@@ -90,11 +94,11 @@ func (me *JaroWinklerDist) CalcString(s1, s2 string) float64 {
 // WARNING: This method is NOT threadsafe!
 func (me *JaroWinklerDist) Calc(s1, s2 []byte) float64 {
 	lenS1, lenS2 := len(s1), len(s2)
-	maxMatchDist := (max(lenS1, lenS2) / 2) - 1
+	maxMatchDist := (math.Max(lenS1, lenS2) / 2) - 1
 	s1matches, s2matches := me.s1matches, me.s2matches
 
 	// Clear the working space
-	for i := 0; i < max(lenS1, lenS2); i++ {
+	for i := 0; i < math.Max(lenS1, lenS2); i++ {
 		s1matches[i] = false
 		s2matches[i] = false
 	}
@@ -102,7 +106,7 @@ func (me *JaroWinklerDist) Calc(s1, s2 []byte) float64 {
 	// Count the matches and track which characters from each string matched.
 	m := float64(0)
 	for i, ch1 := range s1 {
-		left, right := max(0, i-maxMatchDist), min(lenS2, i+maxMatchDist+1)
+		left, right := math.Max(0, i-maxMatchDist), math.Min(lenS2, i+maxMatchDist+1)
 		for j := left; j < right; j++ {
 			ch2 := s2[j]
 			if ch1 == ch2 && !s2matches[j] {
@@ -147,20 +151,4 @@ func (me *JaroWinklerDist) Calc(s1, s2 []byte) float64 {
 	}
 	jaroWinklerDist := jaroDist + float64(p)*me.prefixScale*(1.0-jaroDist)
 	return jaroWinklerDist
-}
-
-// Returns the lesser of a and b.
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-// Returns the greater of a and b.
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }

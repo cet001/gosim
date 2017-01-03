@@ -2,6 +2,7 @@ package gosim
 
 import (
 	"fmt"
+	"github.com/cet001/gosim/math"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -16,7 +17,7 @@ func ExampleDictionary() {
 
 	fmt.Printf("Dictionary has %v distinct terms\n", d.Size())
 
-	sort.Sort(ByTermValueDesc(termvec))
+	sort.Sort(math.ByTermValueDesc(termvec))
 	for _, term := range termvec {
 		fmt.Printf("'%v' has %v occurences\n", d.Word(term.Id), term.Value)
 	}
@@ -62,12 +63,12 @@ func TestDictionary_Vectorize(t *testing.T) {
 
 	// Case 1: updateDict=false
 	vec := d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, false)
-	assert.Equal(t, []Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}}, vec)
+	assert.Equal(t, []math.Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3}, d.word2id)
 
 	// Case 2: updateDict=true
 	vec = d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, true)
-	assert.Equal(t, []Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
+	assert.Equal(t, []math.Term{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, d.word2id)
 }
 
@@ -78,7 +79,12 @@ func TestDictionary_Remove(t *testing.T) {
 		nextTermId: 4,
 	}
 
-	numTermsRemoved := d.Remove([]Term{{Id: 1, Value: 100}, {Id: 3, Value: 300}, {Id: 4, Value: 400}})
+	numTermsRemoved := d.Remove([]math.Term{
+		{Id: 1, Value: 100},
+		{Id: 3, Value: 300},
+		{Id: 4, Value: 400},
+	})
+
 	assert.Equal(t, 2, numTermsRemoved)
 	assert.Equal(t, map[string]int{"b": 2}, d.word2id)
 	assert.Equal(t, map[int]string{2: "b"}, d.id2word)

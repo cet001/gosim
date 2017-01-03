@@ -1,12 +1,13 @@
-package gosim
+package tfidf
 
 // NOTES:
 // - http://blog.christianperone.com/2011/09/machine-learning-text-feature-extraction-tf-idf-part-i
 //
 
 import (
+	"github.com/cet001/gosim/math"
 	"log"
-	"math"
+	gomath "math"
 	"os"
 	"sort"
 	"time"
@@ -37,10 +38,10 @@ type Document struct {
 	Id int
 
 	// Term frequencies for each unique term in this document.
-	tf SparseVector
+	tf math.SparseVector
 
 	// TF-IDF score of each distinct term x in this document.
-	tfidf SparseVector
+	tfidf math.SparseVector
 }
 
 // TF-IDF model.
@@ -63,7 +64,7 @@ func NewTFIDF() *TFIDF {
 	}
 }
 
-func (me *TFIDF) AddDoc(docId int, doc SparseVector) {
+func (me *TFIDF) AddDoc(docId int, doc math.SparseVector) {
 	me.docs = append(me.docs, Document{
 		Id: docId,
 		tf: doc,
@@ -73,24 +74,33 @@ func (me *TFIDF) AddDoc(docId int, doc SparseVector) {
 
 // Trains the model. Returns a list of the distinct terms and their
 // corresponding document frequency (sorted by increasing frequency).
-func (me *TFIDF) Train() []Term {
+func (me *TFIDF) Train() []math.Term {
 	logger.Printf("Calculating document frequencies")
 	startTime := time.Now()
 	df := calcDocFrequencies(me.docs)
 	logger.Printf("Document frequency calculation took %v.", time.Since(startTime))
 
-	logger.Printf("Removing unimportant terms from corpus")
+	logger.Printf("Removing stop words from document frequency map")
 	startTime = time.Now()
-	unimportantTerms := removeUnimportantTerms(df, len(me.docs))
-	filterDocVectors(me.docs, df)
+	stopWords := removeStopWords(df, len(me.docs))
+	logger.Printf("%v stop words removed in %v.", len(stopWords), time.Since(startTime))
+
+	logger.Printf("Removing unimportant terms from document frequency map")
+	startTime = time.Now()
+	unimportantTerms := removeUnimportantTerms(df)
 	logger.Printf("%v unimportant terms removed in %v.", len(unimportantTerms), time.Since(startTime))
+
+	logger.Printf("Filtering document vectors based on reduced document frequency map")
+	startTime = time.Now()
+	filterDocVectors(me.docs, df)
+	logger.Printf("Document vector filtering took %v.", time.Since(startTime))
 
 	logger.Printf("Calculating IDF values for %v terms.", len(df))
 	startTime = time.Now()
 	me.idf = make(sparseHashVector, len(df))
 	totalDocs := float64(len(me.docs))
 	for termId, df := range df {
-		me.idf[termId] = 1.0 + math.Log(totalDocs/float64(df))
+		me.idf[termId] = 1.0 + gomath.Log(totalDocs/float64(df))
 	}
 	logger.Printf("IDF calculation took %v.", time.Since(startTime))
 
@@ -103,7 +113,7 @@ func (me *TFIDF) Train() []Term {
 	logger.Printf("TF-IDF calculation took %v.", time.Since(startTime))
 
 	me.needsRecalc = false
-	return unimportantTerms
+	return stopWords
 }
 
 // Calculates a similarity score indicating how similar documents doc1 and doc2
@@ -111,29 +121,29 @@ func (me *TFIDF) Train() []Term {
 //
 // Returns a score in the range [0.0..1.0], where 1.0 means the documents are
 // identical.
-func (me *TFIDF) CalcSimilarity(doc1, doc2 SparseVector) float64 {
+func (me *TFIDF) CalcSimilarity(doc1, doc2 math.SparseVector) float64 {
 	me.validateState()
 
 	// Calculate cosine similarity
 	doc1_tfidf := calcTFIDF(doc1, me.idf)
 	doc2_tfidf := calcTFIDF(doc2, me.idf)
-	return Dot(doc1_tfidf, doc2_tfidf) / (Norm(doc1_tfidf) * Norm(doc2_tfidf))
+	return math.Dot(doc1_tfidf, doc2_tfidf) / (math.Norm(doc1_tfidf) * math.Norm(doc2_tfidf))
 }
 
 // Ranks the documents in the corpus in terms of how similar they are to the
 // specified query.
-func (me *TFIDF) SimilarDocsForText(query SparseVector) []ScoredItem {
+func (me *TFIDF) SimilarDocsForText(query math.SparseVector) []ScoredItem {
 	me.validateState()
 
 	queryTFIDF := calcTFIDF(query, me.idf)
-	normQueryTFIDF := Norm(queryTFIDF)
+	normQueryTFIDF := math.Norm(queryTFIDF)
 
 	rankedDocs := []ScoredItem{}
 	for i := 0; i < len(me.docs); i++ {
 		doc := &me.docs[i]
 
 		if len(doc.tfidf) > 0 {
-			score := Dot(queryTFIDF, doc.tfidf) / (normQueryTFIDF * Norm(doc.tfidf))
+			score := math.Dot(queryTFIDF, doc.tfidf) / (normQueryTFIDF * math.Norm(doc.tfidf))
 			rankedDocs = append(rankedDocs, ScoredItem{Id: doc.Id, Score: score})
 		}
 	}
@@ -149,10 +159,12 @@ func (me *TFIDF) validateState() {
 	}
 }
 
-// Calculates the document frequency for each distinct term withn the specified
-// document set.
+// Calculates the document frequency (df) for each distinct term withn the specified
+// document set.  df[t] returns the number of documents in the corpus that
+// contain one or more occurrences of term t.
 func calcDocFrequencies(docs []Document) map[int]int {
 	df := make(map[int]int, 1000000)
+
 	for i := 0; i < len(docs); i++ {
 		doc := &docs[i]
 		for j := 0; j < len(doc.tf); j++ {
@@ -160,16 +172,17 @@ func calcDocFrequencies(docs []Document) map[int]int {
 			df[term.Id] += 1
 		}
 	}
+
 	return df
 }
 
 // termFreqs = term frequencies
 // idfs = vector of inverse document frequencies for each term in the corpus.
-func calcTFIDF(termFreqs SparseVector, idfs sparseHashVector) SparseVector {
-	tfidf := make([]Term, len(termFreqs))
+func calcTFIDF(termFreqs math.SparseVector, idfs sparseHashVector) math.SparseVector {
+	tfidf := make([]math.Term, len(termFreqs))
 	for i := 0; i < len(termFreqs); i++ {
 		term := &termFreqs[i]
-		tfidf[i] = Term{
+		tfidf[i] = math.Term{
 			Id:    term.Id,
 			Value: (term.Value * idfs[term.Id]),
 		}
@@ -178,15 +191,32 @@ func calcTFIDF(termFreqs SparseVector, idfs sparseHashVector) SparseVector {
 	return tfidf
 }
 
-func removeUnimportantTerms(docFreqs map[int]int, numDocs int) []Term {
-	removedTerms := make([]Term, 0, 100000)
+// Identifies stopwords within the specified docFreqs map and then removes them.
+// A stopword is defined as a word that is present in more than 20% of the
+// documents in the corpus.
+func removeStopWords(docFreqs map[int]int, numDocs int) []math.Term {
+	stopWords := make([]math.Term, 0, 100000)
+	for termId, docFreq := range docFreqs {
+		isStopWord := (float64(docFreq) / float64(numDocs)) > 0.20
+		if isStopWord {
+			delete(docFreqs, termId)
+			stopWords = append(stopWords, math.Term{Id: termId, Value: float64(docFreq)})
+		}
+	}
+
+	return stopWords
+}
+
+// Identifies and removes "unimportant" terms within the given document
+// frequency map.
+func removeUnimportantTerms(docFreqs map[int]int) []math.Term {
+	removedTerms := make([]math.Term, 0, 100000)
 
 	for termId, docFreq := range docFreqs {
-		isRareInCorpus := docFreq <= 3
-		isStopWord := (float64(docFreq) / float64(numDocs)) > 0.20
-		if isRareInCorpus || isStopWord {
+		isRareInCorpus := (docFreq <= 3)
+		if isRareInCorpus {
 			delete(docFreqs, termId)
-			removedTerms = append(removedTerms, Term{Id: termId, Value: float64(docFreq)})
+			removedTerms = append(removedTerms, math.Term{Id: termId, Value: float64(docFreq)})
 		}
 	}
 
@@ -196,12 +226,12 @@ func removeUnimportantTerms(docFreqs map[int]int, numDocs int) []Term {
 // For each document in []docs, keeps *only* the term Ids within that document's
 // term frequency vector (doc.tf) that are present in the provided termLookup
 // map.  The keys in the termLookup map represent the term Ids, and the values
-// are not used.
+// are not used by this function.
 func filterDocVectors(docs []Document, termLookup map[int]int) {
 	for i := 0; i < len(docs); i++ {
 		doc := &docs[i]
 
-		filteredVec := make(SparseVector, 0, len(doc.tf))
+		filteredVec := make(math.SparseVector, 0, len(doc.tf))
 		for _, term := range doc.tf {
 			_, found := termLookup[term.Id]
 			if found {

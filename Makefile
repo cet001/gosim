@@ -8,14 +8,11 @@ clean :
 
 test : clean
 	@echo ">>> Running unit tests <<<"
-	@go test
+	@go test ./ ./math ./strdist ./models/tfidf
 
 test-coverage : clean
 	@echo ">>> Running unit tests and calculating code coverage <<<"
-	@go test ./ -coverprofile=coverage.out
-	@go tool cover -html=coverage.out -o coverage.html
-	@rm coverage.out
-	@echo ">>> Coverage report saved to ./coverage.html"
+	@go test ./ ./math ./strdist ./models/tfidf -cover
 
 install : test
 	@echo ">>> Building and installing gosim <<<"

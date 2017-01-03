@@ -1,4 +1,4 @@
-package gosim
+package strdist
 
 import (
 	"strings"

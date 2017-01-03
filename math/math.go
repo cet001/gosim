@@ -1,8 +1,26 @@
-package gosim
+// Package math provides lower-level math operations need by other algorithm
+// implementations within this project.
+package math
 
 import (
 	"math"
 )
+
+// Returns the lesser of a and b.
+func Min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// Returns the greater of a and b.
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
 
 // Term represents a token (typically a word) having a unique ID within a document.
 type Term struct {
@@ -118,7 +136,7 @@ func Hash(s string) int {
 	return h
 }
 
-// Similar to the Unix 'uniq' command, this function removes all dupicates from
+// Similar to the Unix 'uniq' command, this function removes all duplicates from
 // a sorted array of int values.
 func Uniq(sortedValues []int) []int {
 	if sortedValues == nil {
@@ -155,7 +173,7 @@ func Intersect(a, b, target []int) []int {
 
 	var intersection []int
 	if target == nil {
-		intersection = make([]int, 0, min(lenA, lenB))
+		intersection = make([]int, 0, Min(lenA, lenB))
 	} else {
 		intersection = target[:0]
 	}
@@ -200,7 +218,7 @@ func Union(a, b, target []int) []int {
 
 	var union []int
 	if target == nil {
-		union = make([]int, 0, max(lenA, lenB))
+		union = make([]int, 0, Max(lenA, lenB))
 	} else {
 		union = target[:0]
 	}

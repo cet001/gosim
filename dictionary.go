@@ -2,6 +2,7 @@ package gosim
 
 import (
 	"encoding/gob"
+	"github.com/cet001/gosim/math"
 	"os"
 	"sort"
 )
@@ -14,7 +15,7 @@ import (
 // underlying Dictionary.
 //
 // Must return the array of terms SORTED by increasing Term.Id.
-type Vectorize func(words []string, updateDict bool) []Term
+type Vectorize func(words []string, updateDict bool) []math.Term
 
 // Manages the mapping between words and their corresponding integer IDs.
 type Dictionary struct {
@@ -45,7 +46,7 @@ func (me *Dictionary) Word(termId int) string {
 
 // Removes the specified terms from this dictionary.
 // Returns the number of terms that were removed.
-func (me *Dictionary) Remove(terms []Term) int {
+func (me *Dictionary) Remove(terms []math.Term) int {
 	numTermsRemoved := 0
 
 	for _, term := range terms {
@@ -61,13 +62,13 @@ func (me *Dictionary) Remove(terms []Term) int {
 }
 
 // See the Vectorize() function type definition for usage details.
-func (me *Dictionary) Vectorize(words []string, updateDict bool) []Term {
+func (me *Dictionary) Vectorize(words []string, updateDict bool) []math.Term {
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {
 		word2freq[word]++
 	}
 
-	terms := make([]Term, 0, len(word2freq))
+	terms := make([]math.Term, 0, len(word2freq))
 
 	if updateDict {
 		for word, freq := range word2freq {
@@ -78,18 +79,18 @@ func (me *Dictionary) Vectorize(words []string, updateDict bool) []Term {
 				me.id2word[termId] = word
 				me.nextTermId++
 			}
-			terms = append(terms, Term{Id: termId, Value: float64(freq)})
+			terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
 		}
 	} else {
 		for word, freq := range word2freq {
 			termId, found := me.word2id[word]
 			if found {
-				terms = append(terms, Term{Id: termId, Value: float64(freq)})
+				terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
 			}
 		}
 	}
 
-	sort.Sort(ByTermId(terms))
+	sort.Sort(math.ByTermId(terms))
 	return terms
 }
 
