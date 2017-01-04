@@ -1,10 +1,57 @@
 package tfidf
 
 import (
+	"fmt"
+	"github.com/cet001/gosim"
 	"github.com/cet001/gosim/math"
 	"github.com/stretchr/testify/assert"
+	"sort"
 	"testing"
 )
+
+func ExampleTFIDF() {
+	// Our corpus
+	corpus := []string{
+		"Life is about making an impact, not making an income.",
+		"Whatever the mind of man can conceive and believe, it can achieve.",
+		"Strive not to be a success, but rather to be of value.",
+		"Two roads diverged in a wood, and I —- I took the one less traveled by, And that has made all the difference",
+		"I attribute my success to this: I never gave or took any excuse.",
+		"You miss 100 percent of the shots you don't take.",
+		"I've missed more than 9000 shots in my career. I've lost almost 300 games. 26 times I've been trusted to take the game winning shot and missed. I've failed over and over and over again in my life. And that is why I succeed.",
+		"The most difficult thing is the decision to act, the rest is merely tenacity.",
+		"Every strike brings me closer to the next home run.",
+		"Definiteness of purpose is the starting point of all achievement.",
+	}
+
+	// Initialize the TFIDF model
+	model := NewTFIDF()
+	dict := gosim.NewDictionary()
+	tokenize := gosim.MakeDefaultTokenizer()
+
+	// Vectorize each document and then insert it into our TFIDF model
+	for docId, doc := range corpus {
+		words := tokenize(doc)
+		docVector := dict.Vectorize(words, true)
+		model.AddDoc(docId, docVector)
+	}
+
+	stats := model.Train()
+
+	// Resolve the StopWord terms to their string token values and then sort them.
+	stopWords := []string{}
+	for _, stopWord := range stats.StopWords {
+		stopWords = append(stopWords, dict.Word(stopWord.Id))
+	}
+	sort.Strings(stopWords)
+
+	fmt.Printf("Unique terms in corpus: %v\n", stats.TermCount)
+	fmt.Printf("Stop words: %v\n", stopWords)
+
+	// Output:
+	// Unique terms in corpus: 10
+	// Stop words: [and is of the to]
+}
 
 func TestTFIDF_AddDoc(t *testing.T) {
 	c := NewTFIDF()
@@ -62,7 +109,7 @@ func TestRemoveStopWords(t *testing.T) {
 		4: 4,
 		5: 5,
 	}
-	removedTerms := removeStopWords(docFreqs, docCount)
+	removedTerms := removeStopWords(docFreqs, docCount, 0.20)
 	assert.Equal(t, map[int]int{1: 1, 2: 2}, docFreqs)
 	assert.Equal(t, 3, len(removedTerms))
 }
@@ -70,13 +117,13 @@ func TestRemoveStopWords(t *testing.T) {
 func TestRemoveUnimportantTerms(t *testing.T) {
 	docFreqs := map[int]int{
 		1: 1,
-		2: 2,
-		3: 10,
-		4: 20,
-		5: 30,
+		2: 222,
+		3: 1,
+		4: 444,
+		5: 555,
 	}
 	removedTerms := removeUnimportantTerms(docFreqs)
-	assert.Equal(t, map[int]int{3: 10, 4: 20, 5: 30}, docFreqs)
+	assert.Equal(t, map[int]int{2: 222, 4: 444, 5: 555}, docFreqs)
 	assert.Equal(t, 2, len(removedTerms))
 }
 

@@ -1,3 +1,6 @@
+// Package tfidf provides an implementation of the TF-IDF statistical model.
+//
+// See https://en.wikipedia.org/wiki/Tf-idf
 package tfidf
 
 // NOTES:
@@ -15,9 +18,29 @@ import (
 
 var logger = log.New(os.Stderr, "[gosim] ", (log.Ldate | log.Ltime | log.Lshortfile))
 
-// Sparse vector represented by a mapping of term IDs to corresponding term values.
-// This is essentially the hashmap version of the SparseVector type.
-type sparseHashVector map[int]float64
+// Represents a vectorized document within a corpus.
+type Document struct {
+	// Unique document ID within a given corpus.
+	Id int
+
+	// Term frequencies for each unique term in this document.
+	tf math.SparseVector
+
+	// TF-IDF score of each distinct term x in this document.
+	tfidf math.SparseVector
+}
+
+// Statistics that were gathered during the training phase (see Train()).
+type Stats struct {
+	// The number of documents in the corpus
+	DocumentCount int
+
+	// The number of distinct terms in the corpus
+	TermCount int
+
+	// The stop words that were identified by this algorithm.
+	StopWords []math.Term
+}
 
 // Anything that can be represented as a unique Id and associated score.
 type ScoredItem struct {
@@ -32,24 +55,20 @@ func (a byScore) Len() int           { return len(a) }
 func (a byScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
 
-// Represents a vectorized document within a corpus.
-type Document struct {
-	// Unique document ID within a given corpus.
-	Id int
-
-	// Term frequencies for each unique term in this document.
-	tf math.SparseVector
-
-	// TF-IDF score of each distinct term x in this document.
-	tfidf math.SparseVector
-}
+// Sparse vector represented by a mapping of term IDs to corresponding term values.
+// This is essentially the hashmap version of the SparseVector type.
+type sparseHashVector map[int]float64
 
 // TF-IDF model.
 type TFIDF struct {
+	// A term will be considered a stopword if it is present in more than T% of
+	// the documents within the corpus, where T = StopWordThreshold.
+	StopWordThreshold float64
+
 	// The documents within this corpus.
 	docs []Document
 
-	// idf[x] -> the inverse document frequency of term x.
+	// idf[t] -> the inverse document frequency of term t.
 	idf sparseHashVector
 
 	// Whenever new documents are added to this corpus, the global stats need to
@@ -59,8 +78,9 @@ type TFIDF struct {
 
 func NewTFIDF() *TFIDF {
 	return &TFIDF{
-		docs:        make([]Document, 0, 200000),
-		needsRecalc: true,
+		StopWordThreshold: 0.20,
+		docs:              make([]Document, 0, 200000),
+		needsRecalc:       true,
 	}
 }
 
@@ -74,7 +94,7 @@ func (me *TFIDF) AddDoc(docId int, doc math.SparseVector) {
 
 // Trains the model. Returns a list of the distinct terms and their
 // corresponding document frequency (sorted by increasing frequency).
-func (me *TFIDF) Train() []math.Term {
+func (me *TFIDF) Train() Stats {
 	logger.Printf("Calculating document frequencies")
 	startTime := time.Now()
 	df := calcDocFrequencies(me.docs)
@@ -82,7 +102,7 @@ func (me *TFIDF) Train() []math.Term {
 
 	logger.Printf("Removing stop words from document frequency map")
 	startTime = time.Now()
-	stopWords := removeStopWords(df, len(me.docs))
+	stopWords := removeStopWords(df, len(me.docs), me.StopWordThreshold)
 	logger.Printf("%v stop words removed in %v.", len(stopWords), time.Since(startTime))
 
 	logger.Printf("Removing unimportant terms from document frequency map")
@@ -113,7 +133,11 @@ func (me *TFIDF) Train() []math.Term {
 	logger.Printf("TF-IDF calculation took %v.", time.Since(startTime))
 
 	me.needsRecalc = false
-	return stopWords
+	return Stats{
+		DocumentCount: len(me.docs),
+		TermCount:     len(df),
+		StopWords:     stopWords,
+	}
 }
 
 // Calculates a similarity score indicating how similar documents doc1 and doc2
@@ -194,10 +218,10 @@ func calcTFIDF(termFreqs math.SparseVector, idfs sparseHashVector) math.SparseVe
 // Identifies stopwords within the specified docFreqs map and then removes them.
 // A stopword is defined as a word that is present in more than 20% of the
 // documents in the corpus.
-func removeStopWords(docFreqs map[int]int, numDocs int) []math.Term {
+func removeStopWords(docFreqs map[int]int, numDocs int, threshold float64) []math.Term {
 	stopWords := make([]math.Term, 0, 100000)
 	for termId, docFreq := range docFreqs {
-		isStopWord := (float64(docFreq) / float64(numDocs)) > 0.20
+		isStopWord := (float64(docFreq) / float64(numDocs)) > threshold
 		if isStopWord {
 			delete(docFreqs, termId)
 			stopWords = append(stopWords, math.Term{Id: termId, Value: float64(docFreq)})
@@ -213,7 +237,7 @@ func removeUnimportantTerms(docFreqs map[int]int) []math.Term {
 	removedTerms := make([]math.Term, 0, 100000)
 
 	for termId, docFreq := range docFreqs {
-		isRareInCorpus := (docFreq <= 3)
+		isRareInCorpus := (docFreq <= 1)
 		if isRareInCorpus {
 			delete(docFreqs, termId)
 			removedTerms = append(removedTerms, math.Term{Id: termId, Value: float64(docFreq)})

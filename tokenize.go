@@ -14,42 +14,26 @@ import (
 type Tokenize func(text string) []string
 
 func MakeDefaultTokenizer() Tokenize {
-	// Determines how raw text is broken up into individual terms.
-	var termSplitFn = func(c rune) bool {
-		return unicode.IsSpace(c) ||
-			c == '.' || c == '!' || c == '?' || c == ',' || c == ':' ||
-			c == ';' || c == '"' || c == '|' || c == '\''
-	}
-
-	// Determines how each term is trimmed.
-	var termTrimFn = func(c rune) bool {
-		return !(unicode.IsLetter(c) || unicode.IsNumber(c))
-	}
-
 	return func(text string) []string {
-		terms := strings.FieldsFunc(text, termSplitFn)
-		filteredTerms := make([]string, 0, len(terms))
+		// Pass 1: Split the string into "coarse" tokens
+		tokens := strings.FieldsFunc(text, func(c rune) bool {
+			return !(unicode.IsLetter(c) || unicode.IsNumber(c) || c == '\'' || c == '-')
+		})
 
-		for _, term := range terms {
-			term = strings.ToLower(term) // case folding
-			term = strings.TrimFunc(term, termTrimFn)
-			if len(term) > 0 {
-				filteredTerms = append(filteredTerms, term)
+		// Pass 2: case-fold and trim non-alphanumeric characters.
+		filteredTokens := make([]string, 0, len(tokens))
+		for _, token := range tokens {
+			token = strings.ToLower(token) // case folding
+			token = strings.TrimFunc(token, func(c rune) bool {
+				return !(unicode.IsLetter(c) || unicode.IsNumber(c))
+			})
+
+			// Discard single-character tokens while we're at it.
+			if len(token) >= 2 {
+				filteredTokens = append(filteredTokens, token)
 			}
 		}
 
-		return filteredTerms
+		return filteredTokens
 	}
 }
-
-// stopWords := []string{
-// 	"he", "than", "first", "our", "can", "they", "up", "who", "other",
-// 	"but", "been", "one", "we", "new", "also", "their", "its", "not", "which",
-// 	"all", "or", "said", "about", "more", "will", "have", "it", "was", "be",
-// 	"has", "an", "are", "this", "as", "from", "by", "that", "at", "with", "is",
-// 	"for", "on", "in", "a", "and", "of", "to", "the"}
-//
-// isStopWord := make(map[string]bool, len(stopWords))
-// for _, word := range stopWords {
-// 	isStopWord[word] = true
-// }
