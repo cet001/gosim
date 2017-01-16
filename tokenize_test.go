@@ -6,14 +6,35 @@ import (
 	"testing"
 )
 
+func ExampleTokenize() {
+	tokenize := MakeDefaultTokenizer()
+	tokens := tokenize("Let's go bowling!")
+
+	for i, token := range tokens {
+		fmt.Printf("token %v: %v\n", i, token)
+	}
+	// Output:
+	// token 0: let's
+	// token 1: go
+	// token 2: bowling
+}
+
 func TestMakeDefaultTokenizer(t *testing.T) {
 	tokenize := MakeDefaultTokenizer()
 
+	// Basic examples
+	assert.Equal(t, []string{"mom's", "and", "dad's"}, tokenize("Mom's and Dad's"))
+	assert.Equal(t, []string{"foo", "bar", "baz", "foo-bar"}, tokenize(" Foo BAR \t baz!?  foo-bar\n"))
+
+	// These input strings should not produce any tokens.
 	assert.Equal(t, []string{}, tokenize(""))
 	assert.Equal(t, []string{}, tokenize(" \n\t"))
-	assert.Equal(t, []string{"mom's", "and", "dad's"}, tokenize("Mom's and Dad's"))
-	assert.Equal(t, []string{"one", "two", "three", "four"}, tokenize(`one "two" three 'four'`))
-	assert.Equal(t, []string{"foo", "bar", "baz", "foo-bar"}, tokenize(" Foo BAR \t baz!?  foo-bar\n"))
+
+	// Verify single-character tokens are filtered out
+	assert.Equal(t, []string{"aa", "aaa"}, tokenize("a aa aaa"))
+
+	// Verify single- and double-quoted strings are "de-quoted"
+	assert.Equal(t, []string{"one", "two", "three", "four"}, tokenize(`one "two" '''three''' 'four'`))
 }
 
 func BenchmarkTokenize(b *testing.B) {

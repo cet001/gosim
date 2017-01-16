@@ -61,8 +61,9 @@ type sparseHashVector map[int]float64
 
 // TF-IDF model.
 type TFIDF struct {
-	// A term will be considered a stopword if it is present in more than T% of
-	// the documents within the corpus, where T = StopWordThreshold.
+	// A term will be considered a stopword if it is present in more than the
+	// percentage of documents in the corpus specified by this field.  Valid
+	// range is [0..1], where 0 = 0% and 1 = 100%.
 	StopWordThreshold float64
 
 	// The documents within this corpus.

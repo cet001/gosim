@@ -13,7 +13,7 @@ import (
 func ExampleDictionary() {
 	d := NewDictionary()
 	doc := []string{"three", "one", "two", "three", "two", "three"}
-	termvec := d.Vectorize(doc, true)
+	termvec := d.VectorizeAndUpdate(doc)
 
 	fmt.Printf("Dictionary has %v distinct terms\n", d.Size())
 
@@ -32,7 +32,7 @@ func TestDictionary_BasicUsage(t *testing.T) {
 	d := NewDictionary()
 	assert.Equal(t, 0, d.Size())
 
-	termvec := d.Vectorize([]string{"b", "a", "c", "b", "a", "a"}, true)
+	termvec := d.VectorizeAndUpdate([]string{"b", "a", "c", "b", "a", "a"})
 
 	// Verify terms are ordered by Id
 	for i := 0; i < len(termvec)-1; i++ {
@@ -62,12 +62,20 @@ func TestDictionary_Vectorize(t *testing.T) {
 	}
 
 	// Case 1: updateDict=false
-	vec := d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, false)
+	vec := d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"})
 	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3}, d.word2id)
+}
+
+func TestDictionary_VectorizeAndUpdate(t *testing.T) {
+	d := &Dictionary{
+		word2id:    map[string]int{"a": 1, "b": 2, "c": 3},
+		id2word:    map[int]string{1: "a", 2: "b", 3: "c"},
+		nextTermId: 4,
+	}
 
 	// Case 2: updateDict=true
-	vec = d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"}, true)
+	vec := d.VectorizeAndUpdate([]string{"c", "a", "a", "Z", "Z", "Z"})
 	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, d.word2id)
 }

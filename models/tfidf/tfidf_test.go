@@ -32,7 +32,7 @@ func ExampleTFIDF() {
 	// Vectorize each document and then insert it into our TFIDF model
 	for docId, doc := range corpus {
 		words := tokenize(doc)
-		docVector := dict.Vectorize(words, true)
+		docVector := dict.VectorizeAndUpdate(words)
 		model.AddDoc(docId, docVector)
 	}
 

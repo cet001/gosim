@@ -7,23 +7,14 @@ import (
 	"sort"
 )
 
-// Vectorize() converts an array of words (terms like "car" or "john smith")
-// into a term frequency feature vector where each term is assigned a unique
-// integer Id and term frequency.
-//
-// If 'updateDict' is true, then new encountered terms will be added to the
-// underlying Dictionary.
-//
-// Must return the array of terms SORTED by increasing Term.Id.
-// type Vectorize func(words []string, updateDict bool) []math.Term
-
-// Manages the mapping between words and their corresponding integer IDs.
+// Dictionary manages the mapping between words and their corresponding integer IDs.
 type Dictionary struct {
 	word2id    map[string]int
 	id2word    map[int]string
 	nextTermId int
 }
 
+// Creates an empty Dictionary.
 func NewDictionary() *Dictionary {
 	const initialCapacity = 1000000
 	return &Dictionary{
@@ -65,11 +56,8 @@ func (me *Dictionary) Remove(terms []math.Term) int {
 // into a term frequency feature vector where each term is assigned a unique
 // integer Id and term frequency.
 //
-// If 'updateDict' is true, then new encountered terms will be added to the
-// underlying Dictionary.
-//
 // Returns the term freqency feature vector in sorted order by increasing Term.Id.
-func (me *Dictionary) Vectorize(words []string, updateDict bool) math.SparseVector {
+func (me *Dictionary) Vectorize(words []string) math.SparseVector {
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {
 		word2freq[word]++
@@ -77,24 +65,38 @@ func (me *Dictionary) Vectorize(words []string, updateDict bool) math.SparseVect
 
 	terms := make([]math.Term, 0, len(word2freq))
 
-	if updateDict {
-		for word, freq := range word2freq {
-			termId, found := me.word2id[word]
-			if !found {
-				termId = me.nextTermId
-				me.word2id[word] = termId
-				me.id2word[termId] = word
-				me.nextTermId++
-			}
+	for word, freq := range word2freq {
+		termId, found := me.word2id[word]
+		if found {
 			terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
 		}
-	} else {
-		for word, freq := range word2freq {
-			termId, found := me.word2id[word]
-			if found {
-				terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
-			}
+	}
+
+	sort.Sort(math.ByTermId(terms))
+	return terms
+}
+
+// This method does what Vectorize() does, and additionally adds new terms that
+// are encountered into the underlying Dictionary.
+//
+// Returns the term freqency feature vector in sorted order by increasing Term.Id.
+func (me *Dictionary) VectorizeAndUpdate(words []string) math.SparseVector {
+	word2freq := make(map[string]int, len(words))
+	for _, word := range words {
+		word2freq[word]++
+	}
+
+	terms := make([]math.Term, 0, len(word2freq))
+
+	for word, freq := range word2freq {
+		termId, found := me.word2id[word]
+		if !found {
+			termId = me.nextTermId
+			me.word2id[word] = termId
+			me.id2word[termId] = word
+			me.nextTermId++
 		}
+		terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
 	}
 
 	sort.Sort(math.ByTermId(terms))
