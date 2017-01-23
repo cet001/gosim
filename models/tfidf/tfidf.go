@@ -8,6 +8,7 @@ package tfidf
 //
 
 import (
+	"encoding/gob"
 	"github.com/cet001/gosim/math"
 	"log"
 	gomath "math"
@@ -24,10 +25,10 @@ type Document struct {
 	Id int
 
 	// Term frequencies for each unique term in this document.
-	tf math.SparseVector
+	TF math.SparseVector
 
 	// TF-IDF score of each distinct term x in this document.
-	tfidf math.SparseVector
+	TFIDF math.SparseVector
 }
 
 // Statistics that were gathered during the training phase (see Train()).
@@ -85,10 +86,64 @@ func NewTFIDF() *TFIDF {
 	}
 }
 
+// Saves this model to the speified file.
+func (me *TFIDF) Save(filePath string) error {
+	file, err := os.Create(filePath)
+	defer file.Close()
+
+	if err == nil {
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(me.StopWordThreshold)
+		encoder.Encode(len(me.docs))
+		for i := 0; i < len(me.docs); i++ {
+			encoder.Encode(&me.docs[i])
+		}
+	}
+
+	return err
+}
+
+// Loads a TFIDF model from a saved image on file.
+func LoadTFIDF(filePath string) (*TFIDF, error) {
+	file, err := os.Open(filePath)
+	defer file.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	decoder := gob.NewDecoder(file)
+
+	var stopWordThreshold float64
+	if err := decoder.Decode(&stopWordThreshold); err != nil {
+		return nil, err
+	}
+
+	var docCount int
+	if err := decoder.Decode(&docCount); err != nil {
+		return nil, err
+	}
+
+	docs := make([]Document, 0, docCount)
+	for i := 0; i < docCount; i++ {
+		var doc Document
+		if err := decoder.Decode(&doc); err != nil {
+			return nil, err
+		}
+		docs = append(docs, doc)
+	}
+
+	return &TFIDF{
+		StopWordThreshold: stopWordThreshold,
+		docs:              docs,
+		needsRecalc:       true,
+	}, nil
+}
+
 func (me *TFIDF) AddDoc(docId int, doc math.SparseVector) {
 	me.docs = append(me.docs, Document{
 		Id: docId,
-		tf: doc,
+		TF: doc,
 	})
 	me.needsRecalc = true
 }
@@ -129,7 +184,7 @@ func (me *TFIDF) Train() Stats {
 	startTime = time.Now()
 	for i := 0; i < len(me.docs); i++ {
 		doc := &me.docs[i]
-		doc.tfidf = calcTFIDF(doc.tf, me.idf)
+		doc.TFIDF = calcTFIDF(doc.TF, me.idf)
 	}
 	logger.Printf("TF-IDF calculation took %v.", time.Since(startTime))
 
@@ -167,8 +222,8 @@ func (me *TFIDF) SimilarDocsForText(query math.SparseVector) []ScoredItem {
 	for i := 0; i < len(me.docs); i++ {
 		doc := &me.docs[i]
 
-		if len(doc.tfidf) > 0 {
-			score := math.Dot(queryTFIDF, doc.tfidf) / (normQueryTFIDF * math.Norm(doc.tfidf))
+		if len(doc.TFIDF) > 0 {
+			score := math.Dot(queryTFIDF, doc.TFIDF) / (normQueryTFIDF * math.Norm(doc.TFIDF))
 			rankedDocs = append(rankedDocs, ScoredItem{Id: doc.Id, Score: score})
 		}
 	}
@@ -184,16 +239,17 @@ func (me *TFIDF) validateState() {
 	}
 }
 
-// Calculates the document frequency (df) for each distinct term withn the specified
-// document set.  df[t] returns the number of documents in the corpus that
-// contain one or more occurrences of term t.
-func calcDocFrequencies(docs []Document) map[int]int {
+// Calculates the document frequency (df) for each distinct term within the
+// specified corpus.  Returns a map df[t], where t is a distinct term ID,
+// and df[t] returns the number of documents in the corpus that contain at least
+// one mention of t.
+func calcDocFrequencies(corpus []Document) map[int]int {
 	df := make(map[int]int, 1000000)
 
-	for i := 0; i < len(docs); i++ {
-		doc := &docs[i]
-		for j := 0; j < len(doc.tf); j++ {
-			term := &doc.tf[j]
+	for i := 0; i < len(corpus); i++ {
+		doc := &corpus[i]
+		for j := 0; j < len(doc.TF); j++ {
+			term := &doc.TF[j]
 			df[term.Id] += 1
 		}
 	}
@@ -256,13 +312,13 @@ func filterDocVectors(docs []Document, termLookup map[int]int) {
 	for i := 0; i < len(docs); i++ {
 		doc := &docs[i]
 
-		filteredVec := make(math.SparseVector, 0, len(doc.tf))
-		for _, term := range doc.tf {
+		filteredVec := make(math.SparseVector, 0, len(doc.TF))
+		for _, term := range doc.TF {
 			_, found := termLookup[term.Id]
 			if found {
 				filteredVec = append(filteredVec, term)
 			}
 		}
-		doc.tf = filteredVec
+		doc.TF = filteredVec
 	}
 }

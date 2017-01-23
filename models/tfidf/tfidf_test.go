@@ -53,6 +53,12 @@ func ExampleTFIDF() {
 	// Stop words: [and is of the to]
 }
 
+func TestCalcTFIDF(t *testing.T) {
+	tf := math.SparseVector{{10, 10}, {40, 40}, {50, 50}}
+	idf := sparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
+	assert.Equal(t, math.SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
+}
+
 func TestTFIDF_AddDoc(t *testing.T) {
 	c := NewTFIDF()
 
@@ -76,28 +82,23 @@ func TestTFIDF_AddDoc(t *testing.T) {
 }
 
 func TestCalcDocFrequencies(t *testing.T) {
+	t1, t2, t3 := math.Term{10, 1}, math.Term{20, 1}, math.Term{30, 1}
 	docs := []Document{
 		{
 			Id: 100,
-			tf: math.SparseVector{{10, 1}, {20, 2}, {30, 3}},
+			TF: math.SparseVector{t1, t2, t3},
 		},
 		{
 			Id: 200,
-			tf: math.SparseVector{{20, 200}, {30, 300}},
+			TF: math.SparseVector{t2, t3},
 		},
 		{
 			Id: 300,
-			tf: math.SparseVector{{30, 300}},
+			TF: math.SparseVector{t3},
 		},
 	}
 
 	assert.Equal(t, map[int]int{10: 1, 20: 2, 30: 3}, calcDocFrequencies(docs))
-}
-
-func TestCalcTFIDF(t *testing.T) {
-	tf := math.SparseVector{{10, 10}, {40, 40}, {50, 50}}
-	idf := sparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
-	assert.Equal(t, math.SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
 }
 
 func TestRemoveStopWords(t *testing.T) {
@@ -131,11 +132,11 @@ func TestFilterDocVectors(t *testing.T) {
 	docs := []Document{
 		{
 			Id: 100,
-			tf: math.SparseVector{{10, 1}, {20, 2}, {30, 3}},
+			TF: math.SparseVector{{10, 1}, {20, 2}, {30, 3}},
 		},
 		{
 			Id: 200,
-			tf: math.SparseVector{{20, 200}, {30, 300}, {40, 400}},
+			TF: math.SparseVector{{20, 200}, {30, 300}, {40, 400}},
 		},
 	}
 
@@ -149,11 +150,11 @@ func TestFilterDocVectors(t *testing.T) {
 		[]Document{
 			{
 				Id: 100,
-				tf: math.SparseVector{{10, 1}, {30, 3}},
+				TF: math.SparseVector{{10, 1}, {30, 3}},
 			},
 			{
 				Id: 200,
-				tf: math.SparseVector{{30, 300}},
+				TF: math.SparseVector{{30, 300}},
 			},
 		},
 		docs,

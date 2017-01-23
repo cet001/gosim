@@ -157,5 +157,4 @@ func LoadDictionary(filePath string) (*Dictionary, error) {
 	}
 
 	return d, nil
-
 }
