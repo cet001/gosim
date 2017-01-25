@@ -86,7 +86,7 @@ func NewTFIDF() *TFIDF {
 	}
 }
 
-// Saves this model to the speified file.
+// Saves this model to the specified file.
 func (me *TFIDF) Save(filePath string) error {
 	file, err := os.Create(filePath)
 	defer file.Close()
@@ -161,11 +161,6 @@ func (me *TFIDF) Train() Stats {
 	stopWords := removeStopWords(df, len(me.docs), me.StopWordThreshold)
 	logger.Printf("%v stop words removed in %v.", len(stopWords), time.Since(startTime))
 
-	logger.Printf("Removing unimportant terms from document frequency map")
-	startTime = time.Now()
-	unimportantTerms := removeUnimportantTerms(df)
-	logger.Printf("%v unimportant terms removed in %v.", len(unimportantTerms), time.Since(startTime))
-
 	logger.Printf("Filtering document vectors based on reduced document frequency map")
 	startTime = time.Now()
 	filterDocVectors(me.docs, df)
@@ -207,7 +202,8 @@ func (me *TFIDF) CalcSimilarity(doc1, doc2 math.SparseVector) float64 {
 	// Calculate cosine similarity
 	doc1_tfidf := calcTFIDF(doc1, me.idf)
 	doc2_tfidf := calcTFIDF(doc2, me.idf)
-	return math.Dot(doc1_tfidf, doc2_tfidf) / (math.Norm(doc1_tfidf) * math.Norm(doc2_tfidf))
+	score := math.Dot(doc1_tfidf, doc2_tfidf) / (math.Norm(doc1_tfidf) * math.Norm(doc2_tfidf))
+	return gomath.Min(1.0, score)
 }
 
 // Ranks the documents in the corpus in terms of how similar they are to the
@@ -224,6 +220,7 @@ func (me *TFIDF) SimilarDocsForText(query math.SparseVector) []ScoredItem {
 
 		if len(doc.TFIDF) > 0 {
 			score := math.Dot(queryTFIDF, doc.TFIDF) / (normQueryTFIDF * math.Norm(doc.TFIDF))
+			score = gomath.Min(1.0, score)
 			rankedDocs = append(rankedDocs, ScoredItem{Id: doc.Id, Score: score})
 		}
 	}

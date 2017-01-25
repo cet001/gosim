@@ -5,6 +5,7 @@ import (
 	"github.com/cet001/gosim"
 	"github.com/cet001/gosim/math"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"sort"
 	"testing"
 )
@@ -49,14 +50,47 @@ func ExampleTFIDF() {
 	fmt.Printf("Stop words: %v\n", stopWords)
 
 	// Output:
-	// Unique terms in corpus: 10
+	// Unique terms in corpus: 94
 	// Stop words: [and is of the to]
+}
+
+func TestSaveAndLoadTFIDF(t *testing.T) {
+	doc := Document{
+		Id:    123,
+		TF:    math.SparseVector{{1, 10}, {2, 20}},
+		TFIDF: math.SparseVector{{1, 0.5}, {2, 0.25}},
+	}
+	docs := []Document{doc}
+
+	model := TFIDF{
+		StopWordThreshold: 0.20,
+		docs:              docs,
+	}
+
+	dataFile := "/tmp/gosim_TestSaveAndLoadModel.dat"
+	defer os.Remove(dataFile)
+
+	saveErr := model.Save(dataFile)
+	assert.Nil(t, saveErr)
+
+	reloadedModel, loadErr := LoadTFIDF(dataFile)
+	assert.Nil(t, loadErr)
+	assert.Equal(t, reloadedModel.StopWordThreshold, model.StopWordThreshold)
+	assert.Equal(t, reloadedModel.docs, model.docs)
+}
+
+func TestLoadTFIDF_nonexistentFile(t *testing.T) {
+	_, err := LoadTFIDF("/a/b/c/nonexistent-file-xxxxxxxxxx.txt")
+	assert.NotNil(t, err)
 }
 
 func TestCalcTFIDF(t *testing.T) {
 	tf := math.SparseVector{{10, 10}, {40, 40}, {50, 50}}
 	idf := sparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
-	assert.Equal(t, math.SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}}, calcTFIDF(tf, idf))
+	assert.Equal(t,
+		math.SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}},
+		calcTFIDF(tf, idf),
+	)
 }
 
 func TestTFIDF_AddDoc(t *testing.T) {
@@ -79,6 +113,67 @@ func TestTFIDF_AddDoc(t *testing.T) {
 
 	assert.Equal(t, 2, len(c.docs))
 	assert.True(t, c.needsRecalc)
+}
+
+func TestTFIDF_CalcSimilarity(t *testing.T) {
+	corpus := []string{
+		"apache helicopter military war", // docId=0
+		"war helicopter apache military", // docId=1
+		"apache software code developer", // docId=2
+		"foo bar baz",                    // docId=3
+	}
+
+	// Initialize the TFIDF model
+	model := NewTFIDF()
+	model.StopWordThreshold = 1.0 // effectively turns off stopword filtering
+	dict := gosim.NewDictionary()
+	tokenize := gosim.MakeDefaultTokenizer()
+
+	// Vectorize each document and then insert it into our TFIDF model
+	vectorizedDocs := []math.SparseVector{}
+	for docId, doc := range corpus {
+		words := tokenize(doc)
+		docVector := dict.VectorizeAndUpdate(words)
+		model.AddDoc(docId, docVector)
+		vectorizedDocs = append(vectorizedDocs, docVector)
+	}
+
+	model.Train()
+
+	assert.Equal(t, 1.0, model.CalcSimilarity(vectorizedDocs[0], vectorizedDocs[1]))
+	assert.Equal(t, 0.0, model.CalcSimilarity(vectorizedDocs[0], vectorizedDocs[3]))
+}
+
+// This is just a sanity check
+func TestTFIDF_SimilarDocsForText(t *testing.T) {
+	corpus := []string{
+		"apache helicopter military war", // docId=0
+		"apache software code developer", // docId=1
+		"apache indian history tribe",    // docId=2
+	}
+
+	// Initialize the TFIDF model
+	model := NewTFIDF()
+	model.StopWordThreshold = 1.0 // effectively turns off stopword filtering
+	dict := gosim.NewDictionary()
+	tokenize := gosim.MakeDefaultTokenizer()
+
+	// Vectorize each document and then insert it into our TFIDF model
+	for docId, doc := range corpus {
+		words := tokenize(doc)
+		docVector := dict.VectorizeAndUpdate(words)
+		model.AddDoc(docId, docVector)
+	}
+
+	model.Train()
+
+	plainTextQuery := "apache http server is used by countless software projects"
+	tokenizedQuery := tokenize(plainTextQuery)
+	vectorizedQuery := dict.Vectorize(tokenizedQuery)
+	similarDocs := model.SimilarDocsForText(vectorizedQuery)
+
+	mostSimilarDoc := similarDocs[0]
+	assert.Equal(t, 1, mostSimilarDoc.Id)
 }
 
 func TestCalcDocFrequencies(t *testing.T) {
