@@ -107,6 +107,7 @@ func BenchmarkDot(b *testing.B) {
 		return v
 	}
 
+	// Create 2 vectors, each containing 1,000 random values
 	v1, v2 := makeRandomVector(vecSize), makeRandomVector(vecSize)
 
 	b.ResetTimer()

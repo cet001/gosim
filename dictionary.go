@@ -106,26 +106,25 @@ func (me *Dictionary) VectorizeAndUpdate(words []string) math.SparseVector {
 // Saves the specified Dictionary object to a binary file.
 func SaveDictionary(d *Dictionary, filePath string) error {
 	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
-	if err == nil {
-		encoder := gob.NewEncoder(file)
-		encoder.Encode(len(d.word2id))
-		encoder.Encode(d.nextTermId)
-		encoder.Encode(d.word2id)
-	}
-
-	return err
+	encoder := gob.NewEncoder(file)
+	encoder.Encode(len(d.word2id))
+	encoder.Encode(d.nextTermId)
+	encoder.Encode(d.word2id)
+	return nil
 }
 
 // Loads a Dictionary from the specified binary file.
 func LoadDictionary(filePath string) (*Dictionary, error) {
 	file, err := os.Open(filePath)
-	defer file.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	decoder := gob.NewDecoder(file)
 	d := &Dictionary{}

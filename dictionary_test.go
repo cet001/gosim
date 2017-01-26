@@ -113,8 +113,9 @@ func TestDictionary_SaveAndLoad(t *testing.T) {
 	assert.Nil(t, err)
 
 	d, err = LoadDictionary(dictFilePath)
-	assert.Nil(t, err)
-	assert.Equal(t, map[string]int{"a": 1, "b": 2}, d.word2id)
-	assert.Equal(t, map[int]string{1: "a", 2: "b"}, d.id2word)
-	assert.Equal(t, 3, d.nextTermId)
+	if assert.Nil(t, err) {
+		assert.Equal(t, map[string]int{"a": 1, "b": 2}, d.word2id)
+		assert.Equal(t, map[int]string{1: "a", 2: "b"}, d.id2word)
+		assert.Equal(t, 3, d.nextTermId)
+	}
 }

@@ -106,11 +106,10 @@ func (me *TFIDF) Save(filePath string) error {
 // Loads a TFIDF model from a saved image on file.
 func LoadTFIDF(filePath string) (*TFIDF, error) {
 	file, err := os.Open(filePath)
-	defer file.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	decoder := gob.NewDecoder(file)
 
