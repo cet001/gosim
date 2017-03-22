@@ -40,6 +40,12 @@ func TestMax(t *testing.T) {
 	assert.Equal(t, 99, Max(99, 0))
 }
 
+func TestAbs(t *testing.T) {
+	assert.Equal(t, 0, Abs(0))
+	assert.Equal(t, 1, Abs(1))
+	assert.Equal(t, 1, Abs(-1))
+}
+
 func TestByTermId(t *testing.T) {
 	terms := SparseVector{{3, 0.30}, {1, 0.10}, {2, 0.20}}
 	sort.Sort(ByTermId(terms))

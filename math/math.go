@@ -22,6 +22,14 @@ func Max(a, b int) int {
 	return b
 }
 
+// Returns the absolute value of x.
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 // Term represents a token (typically a word) having a unique ID within a document.
 type Term struct {
 	Id    int
