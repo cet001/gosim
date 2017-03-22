@@ -56,17 +56,17 @@ func TestJaroWinklerDist_Calc(t *testing.T) {
 }
 
 func Benchmark_JaroWinklerDist_CalcString(b *testing.B) {
-	dist := NewJaroWinklerDist()
-
 	s1values := []string{"martha", "dixon", "apple", "constitution", "mississippi"}
 	s2values := []string{"marhta", "dicksonx", "microsoft", "intervention", "misanthrope"}
-
 	numValues := len(s1values)
 	i := 0
 
-	calcDist := func() {
-		dist.CalcString(s1values[i], s2values[i])
+	dist := NewLevenshtein()
+	// dist := NewJaroWinklerDist()
 
+	calcDist := func() {
+		// dist.CalcString(s1values[i], s2values[i])
+		dist.Dist(s1values[i], s2values[i])
 		i++
 		if i == numValues {
 			i = 0

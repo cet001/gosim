@@ -19,13 +19,13 @@ func ExampleDictionary() {
 
 	sort.Sort(math.ByTermValueDesc(termvec))
 	for _, term := range termvec {
-		fmt.Printf("'%v' has %v occurences\n", d.Word(term.Id), term.Value)
+		fmt.Printf("'%v' term frequency is %v\n", d.Word(term.Id), term.Value)
 	}
 	// Output:
 	// Dictionary has 3 distinct terms
-	// 'three' has 3 occurences
-	// 'two' has 2 occurences
-	// 'one' has 1 occurences
+	// 'three' term frequency is 0.5
+	// 'two' term frequency is 0.3333333333333333
+	// 'one' term frequency is 0.16666666666666666
 }
 
 func TestDictionary_BasicUsage(t *testing.T) {
@@ -61,9 +61,8 @@ func TestDictionary_Vectorize(t *testing.T) {
 		nextTermId: 4,
 	}
 
-	// Case 1: updateDict=false
 	vec := d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"})
-	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}}, vec)
+	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0 / 6.0}, {Id: 3, Value: 1.0 / 6.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3}, d.word2id)
 }
 
@@ -74,9 +73,8 @@ func TestDictionary_VectorizeAndUpdate(t *testing.T) {
 		nextTermId: 4,
 	}
 
-	// Case 2: updateDict=true
 	vec := d.VectorizeAndUpdate([]string{"c", "a", "a", "Z", "Z", "Z"})
-	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0}, {Id: 3, Value: 1.0}, {Id: 4, Value: 3}}, vec)
+	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0 / 6.0}, {Id: 3, Value: 1.0 / 6.0}, {Id: 4, Value: 3.0 / 6.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, d.word2id)
 }
 

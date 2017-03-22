@@ -58,6 +58,7 @@ func (me *Dictionary) Remove(terms []math.Term) int {
 //
 // Returns the term freqency feature vector in sorted order by increasing Term.Id.
 func (me *Dictionary) Vectorize(words []string) math.SparseVector {
+	// Calculate the word frequency for each distinc word in the vector
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {
 		word2freq[word]++
@@ -68,7 +69,11 @@ func (me *Dictionary) Vectorize(words []string) math.SparseVector {
 	for word, freq := range word2freq {
 		termId, found := me.word2id[word]
 		if found {
-			terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
+			term := math.Term{
+				Id:    termId,
+				Value: float64(freq) / float64(len(words)),
+			}
+			terms = append(terms, term)
 		}
 	}
 
@@ -96,7 +101,12 @@ func (me *Dictionary) VectorizeAndUpdate(words []string) math.SparseVector {
 			me.id2word[termId] = word
 			me.nextTermId++
 		}
-		terms = append(terms, math.Term{Id: termId, Value: float64(freq)})
+
+		term := math.Term{
+			Id:    termId,
+			Value: float64(freq) / float64(len(words)),
+		}
+		terms = append(terms, term)
 	}
 
 	sort.Sort(math.ByTermId(terms))
