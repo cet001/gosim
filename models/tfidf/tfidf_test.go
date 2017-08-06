@@ -3,7 +3,7 @@ package tfidf
 import (
 	"fmt"
 	"github.com/cet001/gosim"
-	"github.com/cet001/gosim/math"
+	"github.com/cet001/mathext/vectors"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"sort"
@@ -57,8 +57,8 @@ func ExampleTFIDF() {
 func TestSaveAndLoadTFIDF(t *testing.T) {
 	doc := Document{
 		Id:    123,
-		TF:    math.SparseVector{{1, 10}, {2, 20}},
-		TFIDF: math.SparseVector{{1, 0.5}, {2, 0.25}},
+		TF:    vectors.SparseVector{{1, 10}, {2, 20}},
+		TFIDF: vectors.SparseVector{{1, 0.5}, {2, 0.25}},
 	}
 	docs := []Document{doc}
 
@@ -85,10 +85,10 @@ func TestLoadTFIDF_nonexistentFile(t *testing.T) {
 }
 
 func TestCalcTFIDF(t *testing.T) {
-	tf := math.SparseVector{{10, 10}, {40, 40}, {50, 50}}
+	tf := vectors.SparseVector{{10, 10}, {40, 40}, {50, 50}}
 	idf := sparseHashVector{10: 0.1, 20: 0.2, 30: 0.3, 40: 0.4, 50: 0.5}
 	assert.Equal(t,
-		math.SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}},
+		vectors.SparseVector{{10, (10 * 0.1)}, {40, (40 * 0.4)}, {50, (50 * 0.5)}},
 		calcTFIDF(tf, idf),
 	)
 }
@@ -96,12 +96,12 @@ func TestCalcTFIDF(t *testing.T) {
 func TestTFIDF_AddDoc(t *testing.T) {
 	c := NewTFIDF()
 
-	docvec1 := []math.Term{
+	docvec1 := []vectors.Element{
 		{Id: 1, Value: 10},
 		{Id: 2, Value: 20},
 	}
 
-	docvec2 := []math.Term{
+	docvec2 := []vectors.Element{
 		{Id: 1, Value: 100},
 		{Id: 3, Value: 300},
 	}
@@ -130,7 +130,7 @@ func TestTFIDF_CalcSimilarity(t *testing.T) {
 	tokenize := gosim.MakeDefaultTokenizer()
 
 	// Vectorize each document and then insert it into our TFIDF model
-	vectorizedDocs := []math.SparseVector{}
+	vectorizedDocs := []vectors.SparseVector{}
 	for docId, doc := range corpus {
 		words := tokenize(doc)
 		docVector := dict.VectorizeAndUpdate(words)
@@ -177,19 +177,19 @@ func TestTFIDF_SimilarDocsForText(t *testing.T) {
 }
 
 func TestCalcDocFrequencies(t *testing.T) {
-	t1, t2, t3 := math.Term{10, 1}, math.Term{20, 1}, math.Term{30, 1}
+	t1, t2, t3 := vectors.Element{10, 1}, vectors.Element{20, 1}, vectors.Element{30, 1}
 	docs := []Document{
 		{
 			Id: 100,
-			TF: math.SparseVector{t1, t2, t3},
+			TF: vectors.SparseVector{t1, t2, t3},
 		},
 		{
 			Id: 200,
-			TF: math.SparseVector{t2, t3},
+			TF: vectors.SparseVector{t2, t3},
 		},
 		{
 			Id: 300,
-			TF: math.SparseVector{t3},
+			TF: vectors.SparseVector{t3},
 		},
 	}
 
@@ -227,11 +227,11 @@ func TestFilterDocVectors(t *testing.T) {
 	docs := []Document{
 		{
 			Id: 100,
-			TF: math.SparseVector{{10, 1}, {20, 2}, {30, 3}},
+			TF: vectors.SparseVector{{10, 1}, {20, 2}, {30, 3}},
 		},
 		{
 			Id: 200,
-			TF: math.SparseVector{{20, 200}, {30, 300}, {40, 400}},
+			TF: vectors.SparseVector{{20, 200}, {30, 300}, {40, 400}},
 		},
 	}
 
@@ -245,11 +245,11 @@ func TestFilterDocVectors(t *testing.T) {
 		[]Document{
 			{
 				Id: 100,
-				TF: math.SparseVector{{10, 1}, {30, 3}},
+				TF: vectors.SparseVector{{10, 1}, {30, 3}},
 			},
 			{
 				Id: 200,
-				TF: math.SparseVector{{30, 300}},
+				TF: vectors.SparseVector{{30, 300}},
 			},
 		},
 		docs,

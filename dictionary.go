@@ -2,7 +2,7 @@ package gosim
 
 import (
 	"encoding/gob"
-	"github.com/cet001/gosim/math"
+	"github.com/cet001/mathext/vectors"
 	"os"
 	"sort"
 )
@@ -37,7 +37,7 @@ func (me *Dictionary) Word(termId int) string {
 
 // Removes the specified terms from this dictionary.
 // Returns the number of terms that were removed.
-func (me *Dictionary) Remove(terms []math.Term) int {
+func (me *Dictionary) Remove(terms []vectors.Element) int {
 	numTermsRemoved := 0
 
 	for _, term := range terms {
@@ -57,19 +57,19 @@ func (me *Dictionary) Remove(terms []math.Term) int {
 // integer Id and term frequency.
 //
 // Returns the term freqency feature vector in sorted order by increasing Term.Id.
-func (me *Dictionary) Vectorize(words []string) math.SparseVector {
+func (me *Dictionary) Vectorize(words []string) vectors.SparseVector {
 	// Calculate the word frequency for each distinc word in the vector
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {
 		word2freq[word]++
 	}
 
-	terms := make([]math.Term, 0, len(word2freq))
+	terms := make([]vectors.Element, 0, len(word2freq))
 
 	for word, freq := range word2freq {
 		termId, found := me.word2id[word]
 		if found {
-			term := math.Term{
+			term := vectors.Element{
 				Id:    termId,
 				Value: float64(freq) / float64(len(words)),
 			}
@@ -77,21 +77,21 @@ func (me *Dictionary) Vectorize(words []string) math.SparseVector {
 		}
 	}
 
-	sort.Sort(math.ByTermId(terms))
+	sort.Sort(vectors.ByElementId(terms))
 	return terms
 }
 
 // This method does what Vectorize() does, and additionally adds new terms that
 // are encountered into the underlying Dictionary.
 //
-// Returns the term freqency feature vector in sorted order by increasing Term.Id.
-func (me *Dictionary) VectorizeAndUpdate(words []string) math.SparseVector {
+// Returns the term freqency feature vector in sorted order by increasing Element.Id.
+func (me *Dictionary) VectorizeAndUpdate(words []string) vectors.SparseVector {
 	word2freq := make(map[string]int, len(words))
 	for _, word := range words {
 		word2freq[word]++
 	}
 
-	terms := make([]math.Term, 0, len(word2freq))
+	terms := make([]vectors.Element, 0, len(word2freq))
 
 	for word, freq := range word2freq {
 		termId, found := me.word2id[word]
@@ -102,14 +102,14 @@ func (me *Dictionary) VectorizeAndUpdate(words []string) math.SparseVector {
 			me.nextTermId++
 		}
 
-		term := math.Term{
+		term := vectors.Element{
 			Id:    termId,
 			Value: float64(freq) / float64(len(words)),
 		}
 		terms = append(terms, term)
 	}
 
-	sort.Sort(math.ByTermId(terms))
+	sort.Sort(vectors.ByElementId(terms))
 	return terms
 }
 

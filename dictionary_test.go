@@ -2,7 +2,7 @@ package gosim
 
 import (
 	"fmt"
-	"github.com/cet001/gosim/math"
+	"github.com/cet001/mathext/vectors"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -17,7 +17,7 @@ func ExampleDictionary() {
 
 	fmt.Printf("Dictionary has %v distinct terms\n", d.Size())
 
-	sort.Sort(math.ByTermValueDesc(termvec))
+	sort.Sort(vectors.ByElementValueDesc(termvec))
 	for _, term := range termvec {
 		fmt.Printf("'%v' term frequency is %v\n", d.Word(term.Id), term.Value)
 	}
@@ -62,7 +62,7 @@ func TestDictionary_Vectorize(t *testing.T) {
 	}
 
 	vec := d.Vectorize([]string{"c", "a", "a", "Z", "Z", "Z"})
-	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0 / 6.0}, {Id: 3, Value: 1.0 / 6.0}}, vec)
+	assert.Equal(t, vectors.SparseVector{{Id: 1, Value: 2.0 / 6.0}, {Id: 3, Value: 1.0 / 6.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3}, d.word2id)
 }
 
@@ -74,7 +74,7 @@ func TestDictionary_VectorizeAndUpdate(t *testing.T) {
 	}
 
 	vec := d.VectorizeAndUpdate([]string{"c", "a", "a", "Z", "Z", "Z"})
-	assert.Equal(t, math.SparseVector{{Id: 1, Value: 2.0 / 6.0}, {Id: 3, Value: 1.0 / 6.0}, {Id: 4, Value: 3.0 / 6.0}}, vec)
+	assert.Equal(t, vectors.SparseVector{{Id: 1, Value: 2.0 / 6.0}, {Id: 3, Value: 1.0 / 6.0}, {Id: 4, Value: 3.0 / 6.0}}, vec)
 	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "Z": 4}, d.word2id)
 }
 
@@ -85,7 +85,7 @@ func TestDictionary_Remove(t *testing.T) {
 		nextTermId: 4,
 	}
 
-	numTermsRemoved := d.Remove([]math.Term{
+	numTermsRemoved := d.Remove([]vectors.Element{
 		{Id: 1, Value: 100},
 		{Id: 3, Value: 300},
 		{Id: 4, Value: 400},
