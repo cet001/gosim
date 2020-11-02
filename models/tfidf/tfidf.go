@@ -24,7 +24,7 @@ type Document struct {
 	// Unique document ID within a given corpus.
 	Id int
 
-	// Term frequencies for each unique term in this document.
+	// Term frequency of each distinct term in this document.
 	TF vectors.SparseVector
 
 	// TF-IDF score of each distinct term x in this document.
@@ -236,9 +236,9 @@ func (me *TFIDF) validateState() {
 }
 
 // Calculates the document frequency (df) for each distinct term within the
-// specified corpus.  Returns a map df[t], where t is a distinct term ID,
-// and df[t] returns the number of documents in the corpus that contain at least
-// one mention of t.
+// specified corpus.  Returns a map df[t], where t is a term ID, and df[t]
+// returns the number of documents in the corpus that contain at least one
+// mention of t.
 func calcDocFrequencies(corpus []Document) map[int]int {
 	df := make(map[int]int, 1000000)
 
@@ -269,8 +269,8 @@ func calcTFIDF(termFreqs vectors.SparseVector, idfs sparseHashVector) vectors.Sp
 }
 
 // Identifies stopwords within the specified docFreqs map and then removes them.
-// A stopword is defined as a word that is present in more than 20% of the
-// documents in the corpus.
+// A stopword is defined as a word that is present in more than 'threshold' %
+// of the documents in the corpus.
 func removeStopWords(docFreqs map[int]int, numDocs int, threshold float64) []vectors.Element {
 	stopWords := make([]vectors.Element, 0, 100000)
 	for termId, docFreq := range docFreqs {
